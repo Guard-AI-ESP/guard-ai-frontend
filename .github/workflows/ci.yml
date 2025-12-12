@@ -1,0 +1,15 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [dev, main]
+
+jobs:
+  node-ci:
+    uses: Guard-AI-ESP/guard-ai-devx/.github/workflows/node-ci.yml@main
+    with:
+      node-version: "20"
+      working-directory: "."
+      run-tests: true
+      build: true
