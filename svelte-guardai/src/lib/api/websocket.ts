@@ -48,14 +48,11 @@ class WebSocketManager {
 
 	private doConnect(): void {
 		const apiKey = getApiKey();
-		if (!apiKey) {
-			console.error('Cannot connect WebSocket: No API key configured');
-			connectionStore.setWsStatus('error', 'No API key configured');
-			return;
-		}
 
-		// Browsers don't support custom headers on WebSocket, use query param
-		const wsUrl = `${config.wsBaseUrl}/events/stream?api_key=${encodeURIComponent(apiKey)}`;
+		// Si pas de clé API, on se connecte sans — le backend accepte sans clé en dev
+		const wsUrl = apiKey
+			? `${config.wsBaseUrl}/events/stream?api_key=${encodeURIComponent(apiKey)}`
+			: `${config.wsBaseUrl}/events/stream`;
 
 		connectionStore.setWsStatus('connecting');
 

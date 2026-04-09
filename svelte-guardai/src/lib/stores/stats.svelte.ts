@@ -17,10 +17,8 @@ export const totalEvents = derived(statsData, ($data) => $data?.total_events ?? 
 export const last24h = derived(statsData, ($data) => $data?.last_24h ?? 0);
 export const criticalCount = derived(statsData, ($data) => $data?.by_severity?.critical ?? 0);
 export const warningCount = derived(statsData, ($data) => $data?.by_severity?.warning ?? 0);
-export const activeAlerts = derived(
-	[criticalCount, warningCount],
-	([$critical, $warning]) => $critical + $warning
-);
+// active_alerts vient directement du backend (critiques des 24 dernières heures)
+export const activeAlerts = derived(statsData, ($data) => $data?.active_alerts ?? 0);
 export const bySource = derived(statsData, ($data) => $data?.by_source ?? {});
 export const bySeverity = derived(statsData, ($data) => $data?.by_severity ?? {});
 
