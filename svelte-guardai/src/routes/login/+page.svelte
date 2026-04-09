@@ -2,45 +2,39 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
-	import { CircleCheck, X, TriangleAlert } from '@lucide/svelte';
+	import { X, TriangleAlert } from '@lucide/svelte';
+	import { authStore, authLoading, authError, isAuthenticated } from '$lib/stores/auth.svelte';
+	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 
 	let email = $state('');
 	let password = $state('');
 	let rememberMe = $state(false);
-	let showSuccessAlert = $state(false);
-	let showWarningAlert = $state(false);
-	let selectedLanguage = $state('en');
+	let selectedLanguage = $state('fr');
 
-	function handleSubmit(e: Event) {
+	// Redirige si déjà connecté
+	onMount(() => {
+		if ($isAuthenticated) goto('/dashboard');
+	});
+
+	async function handleSubmit(e: Event) {
 		e.preventDefault();
-		console.log('Login attempt:', { email, password, rememberMe });
-		showSuccessAlert = true;
+		await authStore.login(email, password);
 	}
 </script>
 
 <div class="min-h-screen bg-gray-50 flex items-center justify-center p-4">
 
-	<!-- Alerts -->
-	{#if showSuccessAlert || showWarningAlert}
-		<div class="fixed top-4 right-4 z-50 flex flex-col gap-2 min-w-72">
-			{#if showSuccessAlert}
-				<div class="flex items-center gap-3 px-4 py-3 bg-white border border-green-200 rounded-lg shadow-md text-sm">
-					<CircleCheck class="h-4 w-4 text-green-600 shrink-0" />
-					<span class="flex-1 text-green-800 font-medium">Connexion réussie</span>
-					<button onclick={() => (showSuccessAlert = false)} class="text-muted-foreground hover:text-foreground">
-						<X class="h-4 w-4" />
-					</button>
-				</div>
-			{/if}
-			{#if showWarningAlert}
-				<div class="flex items-center gap-3 px-4 py-3 bg-white border border-orange-200 rounded-lg shadow-md text-sm">
-					<TriangleAlert class="h-4 w-4 text-orange-600 shrink-0" />
-					<span class="flex-1 text-orange-800 font-medium">Identifiants incorrects</span>
-					<button onclick={() => (showWarningAlert = false)} class="text-muted-foreground hover:text-foreground">
-						<X class="h-4 w-4" />
-					</button>
-				</div>
-			{/if}
+	<!-- Alerte erreur -->
+	{#if $authError}
+		<div class="fixed top-4 right-4 z-50 min-w-72">
+			<div class="flex items-center gap-3 px-4 py-3 bg-white border border-orange-200 rounded-lg shadow-md text-sm">
+				<TriangleAlert class="h-4 w-4 text-orange-600 shrink-0" />
+				<span class="flex-1 text-orange-800 font-medium">{$authError}</span>
+				<button onclick={() => authError.set(null)} class="text-muted-foreground hover:text-foreground">
+					<X class="h-4 w-4" />
+				</button>
+			</div>
 		</div>
 	{/if}
 
@@ -107,8 +101,8 @@
 				<Label for="remember" class="text-sm font-normal cursor-pointer">Se souvenir de moi</Label>
 			</div>
 
-			<Button type="submit" class="w-full">
-				Se connecter
+			<Button type="submit" class="w-full" disabled={$authLoading}>
+				{$authLoading ? 'Connexion...' : 'Se connecter'}
 			</Button>
 		</form>
 
