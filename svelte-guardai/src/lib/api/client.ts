@@ -6,6 +6,12 @@
 import { config, getApiKey } from '$lib/config';
 import type { ApiError } from '$lib/types';
 
+/** Retourne le JWT stocké en localStorage (côté client uniquement) */
+function getStoredToken(): string | null {
+	if (typeof localStorage === 'undefined') return null;
+	return localStorage.getItem('guard_ai_token');
+}
+
 export class ApiClientError extends Error {
 	constructor(
 		message: string,
@@ -35,9 +41,15 @@ export async function apiFetch<T>(endpoint: string, options: FetchOptions = {}):
 	};
 
 	if (!skipAuth) {
-		const apiKey = getApiKey();
-		if (apiKey) {
-			(headers as Record<string, string>)['X-API-Key'] = apiKey;
+		// JWT Bearer en priorité, fallback sur l'API key statique (legacy / IoT)
+		const jwt = getStoredToken();
+		if (jwt) {
+			(headers as Record<string, string>)['Authorization'] = `Bearer ${jwt}`;
+		} else {
+			const apiKey = getApiKey();
+			if (apiKey) {
+				(headers as Record<string, string>)['X-API-Key'] = apiKey;
+			}
 		}
 	}
 

@@ -47,12 +47,17 @@ class WebSocketManager {
 	}
 
 	private doConnect(): void {
+		// JWT en priorité, fallback sur l'API key statique (legacy)
+		const jwt = typeof localStorage !== 'undefined' ? localStorage.getItem('guard_ai_token') : null;
 		const apiKey = getApiKey();
 
-		// Si pas de clé API, on se connecte sans — le backend accepte sans clé en dev
-		const wsUrl = apiKey
-			? `${config.wsBaseUrl}/events/stream?api_key=${encodeURIComponent(apiKey)}`
-			: `${config.wsBaseUrl}/events/stream`;
+		let wsUrl = `${config.wsBaseUrl}/events/stream`;
+		if (jwt) {
+			wsUrl += `?token=${encodeURIComponent(jwt)}`;
+		} else if (apiKey) {
+			wsUrl += `?token=${encodeURIComponent(apiKey)}`;
+		}
+		// Sinon connecte sans auth (dev mode — backend autorise)
 
 		connectionStore.setWsStatus('connecting');
 
