@@ -309,7 +309,7 @@
 
 	<!-- Delete Modal -->
 	<DeleteModal
-		bind:isOpen={showDeleteModal}
+		bind:open={showDeleteModal}
 		title="Supprimer l'interaction"
 		message={callToDelete ? `Êtes-vous sûr de vouloir supprimer cette interaction de la ${callToDelete.camera} ? L'enregistrement vidéo et audio sera définitivement supprimé.` : ''}
 		on:confirm={confirmDelete}

@@ -312,7 +312,7 @@
 
 	<!-- Delete Modal -->
 	<DeleteModal
-		bind:isOpen={showDeleteModal}
+		bind:open={showDeleteModal}
 		title="Supprimer l'enregistrement"
 		message={recordingToDelete ? `Êtes-vous sûr de vouloir supprimer l'enregistrement de la ${recordingToDelete.camera} du ${formatDate(recordingToDelete.date)} à ${formatTime(recordingToDelete.date)} ? Cette action est irréversible.` : ''}
 		on:confirm={confirmDelete}

@@ -419,7 +419,7 @@
 
 	<!-- Delete Modal -->
 	<DeleteModal
-		bind:isOpen={showDeleteModal}
+		bind:open={showDeleteModal}
 		title="Supprimer l'enregistrement"
 		message={recordingToDelete ? `Êtes-vous sûr de vouloir supprimer "${recordingToDelete.title}" ? Cette action est irréversible.` : ''}
 		on:confirm={confirmDelete}

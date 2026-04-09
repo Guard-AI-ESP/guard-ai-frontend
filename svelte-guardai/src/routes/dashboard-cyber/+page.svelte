@@ -346,7 +346,7 @@
 
 	<!-- Delete Modal -->
 	<DeleteModal
-		bind:isOpen={showDeleteModal}
+		bind:open={showDeleteModal}
 		title="Delete Device"
 		message={deviceToDelete ? `Are you sure you want to delete ${deviceToDelete.name}? This action cannot be undone.` : ''}
 		on:confirm={confirmDelete}

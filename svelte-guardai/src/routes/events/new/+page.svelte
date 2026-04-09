@@ -1,38 +1,40 @@
 <script lang="ts">
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import DateTimePicker from '$lib/components/DateTimePicker.svelte';
-	import { fade, scale } from 'svelte/transition';
-	import { cubicOut } from 'svelte/easing';
+	import DeleteModal from '$lib/components/DeleteModal.svelte';
+	import * as Card from '$lib/components/ui/card';
+	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
+	import { Label } from '$lib/components/ui/label';
+	import { Badge } from '$lib/components/ui/badge';
+	import * as Dialog from '$lib/components/ui/dialog';
+	import { Plus, CalendarDays, Clock, Pencil, Trash2, BellOff, CameraOff, BrainCircuit } from '@lucide/svelte';
 
-	type Event = {
+	type GuardEvent = {
 		id: string;
 		title: string;
 		start: Date;
 		end: Date;
 		description: string;
-		settings: {
-			disableNotification: boolean;
-			disableCamera: boolean;
-			disableAI: boolean;
-		};
+		settings: { disableNotification: boolean; disableCamera: boolean; disableAI: boolean };
 	};
 
-	let events: Event[] = [];
-	let showPopup = false;
-	let editingIndex: number | null = null;
+	let events = $state<GuardEvent[]>([]);
+	let showPopup = $state(false);
+	let editingIndex = $state<number | null>(null);
+	let deleteModalOpen = $state(false);
+	let deleteTargetIndex = $state<number | null>(null);
 
-	// Form fields
-	let eventTitle = '';
-	let eventStart = '';
-	let eventEnd = '';
-	let eventDescription = '';
-	let disableNotification = false;
-	let disableCamera = false;
-	let disableAI = false;
+	let eventTitle = $state('');
+	let eventStart = $state('');
+	let eventEnd = $state('');
+	let eventDescription = $state('');
+	let disableNotification = $state(false);
+	let disableCamera = $state(false);
+	let disableAI = $state(false);
 
 	function openPopup(index: number | null = null) {
 		if (index !== null) {
-			// Edit mode
 			const event = events[index];
 			editingIndex = index;
 			eventTitle = event.title;
@@ -43,7 +45,6 @@
 			disableCamera = event.settings.disableCamera;
 			disableAI = event.settings.disableAI;
 		} else {
-			// New event mode
 			resetForm();
 		}
 		showPopup = true;
@@ -66,336 +67,221 @@
 	}
 
 	function formatDateTimeLocal(date: Date): string {
-		const year = date.getFullYear();
-		const month = String(date.getMonth() + 1).padStart(2, '0');
-		const day = String(date.getDate()).padStart(2, '0');
-		const hours = String(date.getHours()).padStart(2, '0');
-		const minutes = String(date.getMinutes()).padStart(2, '0');
-		return `${year}-${month}-${day}T${hours}:${minutes}`;
+		const pad = (n: number) => String(n).padStart(2, '0');
+		return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 	}
 
 	function formatDate(date: Date): string {
-		return date.toLocaleDateString('fr-FR', {
-			day: '2-digit',
-			month: 'long',
-			year: 'numeric'
-		});
+		return date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
 	}
 
 	function formatTime(date: Date): string {
-		return date.toLocaleTimeString('fr-FR', {
-			hour: '2-digit',
-			minute: '2-digit'
-		});
+		return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 	}
 
-	function handleSubmit(e: Event) {
+	function handleSubmit(e: SubmitEvent) {
 		e.preventDefault();
-
-		const newEvent: Event = {
+		const newEvent: GuardEvent = {
 			id: editingIndex !== null ? events[editingIndex].id : Date.now().toString(),
 			title: eventTitle,
 			start: new Date(eventStart),
 			end: new Date(eventEnd),
 			description: eventDescription,
-			settings: {
-				disableNotification,
-				disableCamera,
-				disableAI
-			}
+			settings: { disableNotification, disableCamera, disableAI }
 		};
-
 		if (editingIndex !== null) {
-			// Update existing event
 			events[editingIndex] = newEvent;
 			events = [...events];
 		} else {
-			// Add new event
 			events = [...events, newEvent];
 		}
-
 		closePopup();
 	}
 
-	function deleteEvent(index: number) {
-		if (confirm('Êtes-vous sûr de vouloir supprimer cet événement ?')) {
-			events = events.filter((_, i) => i !== index);
-		}
-	}
-
-	function handleBackdropClick(event: MouseEvent) {
-		if (event.target === event.currentTarget) {
-			closePopup();
-		}
+	function confirmDelete(index: number) {
+		deleteTargetIndex = index;
+		deleteModalOpen = true;
 	}
 </script>
 
 <svelte:head>
-	<title>Nouvel événement - Guard AI</title>
+	<title>Événements - Guard AI</title>
 </svelte:head>
 
 <div class="flex h-screen bg-gray-50">
-	<!-- Sidebar -->
 	<Sidebar />
 
-	<!-- Main content -->
 	<main class="flex-1 overflow-y-auto">
-		<div class="p-8">
-			<div class="max-w-7xl mx-auto">
-				<div class="flex items-center justify-between mb-8">
-					<h1 class="text-3xl font-bold text-gray-900">Gestion des événements</h1>
-				</div>
+		<div class="p-8 max-w-7xl mx-auto">
 
-				<!-- No events state -->
-				{#if events.length === 0}
-					<div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-12">
-						<div class="text-center">
-							<div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-teal-100 mb-4">
-								<svg class="h-8 w-8 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-								</svg>
-							</div>
-							<h3 class="text-lg font-semibold text-gray-900 mb-2">Aucun événement</h3>
-							<p class="text-gray-500 mb-6">Vous n'avez aucun événement planifié pour le moment</p>
-							<button
-								on:click={() => openPopup()}
-								class="px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors inline-flex items-center gap-2"
-							>
-								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-								</svg>
-								Ajouter un événement
-							</button>
+			<div class="flex items-center justify-between mb-8">
+				<h1 class="text-2xl font-semibold text-foreground">Gestion des événements</h1>
+				{#if events.length > 0}
+					<Button onclick={() => openPopup()}>
+						<Plus class="w-4 h-4 mr-1.5" /> Nouvel événement
+					</Button>
+				{/if}
+			</div>
+
+			{#if events.length === 0}
+				<!-- Empty state -->
+				<Card.Root>
+					<Card.Content class="flex flex-col items-center justify-center py-16">
+						<div class="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+							<CalendarDays class="w-7 h-7 text-primary" />
 						</div>
-					</div>
-				{:else}
-					<!-- Events list -->
-					<div class="mb-6">
-						<button
-							on:click={() => openPopup()}
-							class="px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors inline-flex items-center gap-2"
-						>
-							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-							</svg>
-							Nouvel événement
-						</button>
-					</div>
+						<h3 class="text-base font-semibold text-foreground mb-1">Aucun événement</h3>
+						<p class="text-sm text-muted-foreground mb-6">Vous n'avez aucun événement planifié pour le moment</p>
+						<Button onclick={() => openPopup()}>
+							<Plus class="w-4 h-4 mr-1.5" /> Ajouter un événement
+						</Button>
+					</Card.Content>
+				</Card.Root>
+			{:else}
+				<div class="space-y-3">
+					{#each events as event, index (event.id)}
+						<Card.Root class="hover:shadow-md transition-shadow">
+							<Card.Content class="p-6">
+								<div class="flex items-start justify-between gap-4">
+									<div class="flex-1 min-w-0">
+										<h3 class="text-base font-semibold text-foreground mb-1">{event.title}</h3>
+										<p class="text-sm text-muted-foreground mb-3">{event.description}</p>
 
-					<div class="space-y-4">
-						{#each events as event, index (event.id)}
-							<div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-								<div class="flex items-start justify-between">
-									<div class="flex-1">
-										<h3 class="text-lg font-semibold text-gray-900 mb-2">{event.title}</h3>
-										<p class="text-sm text-gray-600 mb-4">{event.description}</p>
-
-										<div class="flex items-center gap-6 text-sm text-gray-500 mb-4">
-											<div class="flex items-center gap-2">
-												<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-												</svg>
-												<span>{formatDate(event.start)}</span>
-											</div>
-											<div class="flex items-center gap-2">
-												<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-												</svg>
-												<span>{formatTime(event.start)} - {formatTime(event.end)}</span>
-											</div>
+										<div class="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-3">
+											<span class="flex items-center gap-1.5">
+												<CalendarDays class="w-3.5 h-3.5" />
+												{formatDate(event.start)}
+											</span>
+											<span class="flex items-center gap-1.5">
+												<Clock class="w-3.5 h-3.5" />
+												{formatTime(event.start)} – {formatTime(event.end)}
+											</span>
 										</div>
 
-										<!-- Settings badges -->
 										{#if event.settings.disableNotification || event.settings.disableCamera || event.settings.disableAI}
-											<div class="flex flex-wrap gap-2">
+											<div class="flex flex-wrap gap-1.5">
 												{#if event.settings.disableNotification}
-													<span class="px-3 py-1 bg-orange-100 text-orange-700 text-xs font-medium rounded-full">
-														🔕 Notifications désactivées
-													</span>
+													<Badge variant="outline" class="gap-1 border-orange-200 text-orange-700 bg-orange-50 text-xs">
+														<BellOff class="w-3 h-3" /> Notifications off
+													</Badge>
 												{/if}
 												{#if event.settings.disableCamera}
-													<span class="px-3 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">
-														📹 Caméra désactivée
-													</span>
+													<Badge variant="outline" class="gap-1 border-red-200 text-red-700 bg-red-50 text-xs">
+														<CameraOff class="w-3 h-3" /> Caméra off
+													</Badge>
 												{/if}
 												{#if event.settings.disableAI}
-													<span class="px-3 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded-full">
-														🤖 IA désactivée
-													</span>
+													<Badge variant="outline" class="gap-1 border-purple-200 text-purple-700 bg-purple-50 text-xs">
+														<BrainCircuit class="w-3 h-3" /> IA off
+													</Badge>
 												{/if}
 											</div>
 										{/if}
 									</div>
 
-									<!-- Actions -->
-									<div class="flex items-center gap-2 ml-4">
-										<button
-											on:click={() => openPopup(index)}
-											class="p-2 hover:bg-gray-100 text-gray-600 rounded-lg transition-colors"
-											title="Modifier"
-										>
-											<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-											</svg>
-										</button>
-										<button
-											on:click={() => deleteEvent(index)}
-											class="p-2 hover:bg-red-50 text-gray-600 hover:text-red-600 rounded-lg transition-colors"
-											title="Supprimer"
-										>
-											<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-											</svg>
-										</button>
+									<div class="flex items-center gap-1 shrink-0">
+										<Button variant="ghost" size="icon" onclick={() => openPopup(index)} title="Modifier">
+											<Pencil class="w-4 h-4" />
+										</Button>
+										<Button variant="ghost" size="icon" class="text-muted-foreground hover:text-destructive" onclick={() => confirmDelete(index)} title="Supprimer">
+											<Trash2 class="w-4 h-4" />
+										</Button>
 									</div>
 								</div>
-							</div>
-						{/each}
-					</div>
-				{/if}
-			</div>
+							</Card.Content>
+						</Card.Root>
+					{/each}
+				</div>
+			{/if}
 		</div>
 	</main>
 </div>
 
-<!-- Event Popup -->
-{#if showPopup}
-	<div
-		class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
-		on:click={handleBackdropClick}
-		role="presentation"
-		transition:fade={{ duration: 200 }}
-	>
-		<div
-			class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-			role="dialog"
-			aria-modal="true"
-			transition:scale={{ duration: 200, start: 0.95, easing: cubicOut }}
-		>
-			<!-- Header -->
-			<div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
-				<h2 class="text-xl font-semibold text-gray-900">
-					{editingIndex !== null ? 'Modifier l\'événement' : 'Ajouter un événement'}
-				</h2>
-				<button
-					on:click={closePopup}
-					class="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-				>
-					<svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-					</svg>
-				</button>
+<!-- Event Dialog -->
+<Dialog.Root bind:open={showPopup}>
+	<Dialog.Content class="max-w-2xl max-h-[90vh] overflow-y-auto">
+		<Dialog.Header>
+			<Dialog.Title>
+				{editingIndex !== null ? "Modifier l'événement" : 'Ajouter un événement'}
+			</Dialog.Title>
+		</Dialog.Header>
+
+		<form id="event-form" onsubmit={handleSubmit} class="space-y-5 py-2">
+			<div class="space-y-1.5">
+				<Label for="event-title">Titre de l'événement</Label>
+				<Input
+					type="text"
+					id="event-title"
+					bind:value={eventTitle}
+					placeholder="Ex: Réunion de famille"
+					required
+				/>
 			</div>
 
-			<!-- Form -->
-			<form on:submit={handleSubmit} class="p-6 space-y-5">
-				<!-- Title -->
-				<div>
-					<label for="event-title" class="block text-sm font-medium text-gray-700 mb-2">
-						Titre de l'événement
-					</label>
-					<input
-						type="text"
-						id="event-title"
-						bind:value={eventTitle}
-						required
-						class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-gray-900"
-						placeholder="Ex: Réunion de famille"
-					/>
-				</div>
+			<DateTimePicker bind:value={eventStart} label="Début de l'événement" id="event-start" required />
+			<DateTimePicker bind:value={eventEnd} label="Fin de l'événement" id="event-end" required />
 
-				<!-- Start date -->
-				<DateTimePicker
-					bind:value={eventStart}
-					label="Début de l'événement"
-					id="event-start"
+			<div class="space-y-1.5">
+				<Label for="event-description">Description</Label>
+				<textarea
+					id="event-description"
+					bind:value={eventDescription}
 					required
-				/>
+					rows="3"
+					placeholder="Décrivez votre événement..."
+					class="w-full px-3 py-2 border border-input bg-background text-foreground text-sm rounded-md
+					       focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 resize-none transition-colors"
+				></textarea>
+			</div>
 
-				<!-- End date -->
-				<DateTimePicker
-					bind:value={eventEnd}
-					label="Fin de l'événement"
-					id="event-end"
-					required
-				/>
-
-				<!-- Description -->
-				<div>
-					<label for="event-description" class="block text-sm font-medium text-gray-700 mb-2">
-						Description
-					</label>
-					<textarea
-						id="event-description"
-						bind:value={eventDescription}
-						required
-						rows="4"
-						class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-gray-900 resize-none"
-						placeholder="Décrivez votre événement..."
-					></textarea>
-				</div>
-
-				<!-- Settings -->
-				<div>
-					<label class="block text-sm font-medium text-gray-700 mb-3">
-						Paramètres
-					</label>
-					<div class="space-y-3">
-						<label class="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors">
+			<div class="space-y-1.5">
+				<Label>Paramètres</Label>
+				<div class="space-y-2">
+					{#each [
+						{ key: 'disableNotification', label: 'Désactiver les notifications', desc: 'Aucune notification pendant cet événement' },
+						{ key: 'disableCamera', label: 'Désactiver la caméra', desc: 'Les caméras ne seront pas actives' },
+						{ key: 'disableAI', label: "Désactiver l'IA", desc: 'La détection intelligente sera désactivée' }
+					] as setting}
+						<label class="flex items-start gap-3 p-3 rounded-md hover:bg-muted/50 cursor-pointer transition-colors">
 							<input
 								type="checkbox"
-								bind:checked={disableNotification}
-								class="w-5 h-5 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
+								checked={setting.key === 'disableNotification' ? disableNotification : setting.key === 'disableCamera' ? disableCamera : disableAI}
+								onchange={(e) => {
+									const val = (e.target as HTMLInputElement).checked;
+									if (setting.key === 'disableNotification') disableNotification = val;
+									else if (setting.key === 'disableCamera') disableCamera = val;
+									else disableAI = val;
+								}}
+								class="mt-0.5 h-4 w-4 rounded border-input accent-primary"
 							/>
-							<div class="flex-1">
-								<span class="text-sm font-medium text-gray-900">Désactiver les notifications</span>
-								<p class="text-xs text-gray-500">Aucune notification ne sera envoyée pendant cet événement</p>
+							<div>
+								<p class="text-sm font-medium text-foreground">{setting.label}</p>
+								<p class="text-xs text-muted-foreground">{setting.desc}</p>
 							</div>
 						</label>
-
-						<label class="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors">
-							<input
-								type="checkbox"
-								bind:checked={disableCamera}
-								class="w-5 h-5 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
-							/>
-							<div class="flex-1">
-								<span class="text-sm font-medium text-gray-900">Désactiver la caméra</span>
-								<p class="text-xs text-gray-500">Les caméras ne seront pas actives pendant cet événement</p>
-							</div>
-						</label>
-
-						<label class="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors">
-							<input
-								type="checkbox"
-								bind:checked={disableAI}
-								class="w-5 h-5 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
-							/>
-							<div class="flex-1">
-								<span class="text-sm font-medium text-gray-900">Désactiver l'IA</span>
-								<p class="text-xs text-gray-500">La détection intelligente sera désactivée pendant cet événement</p>
-							</div>
-						</label>
-					</div>
+					{/each}
 				</div>
+			</div>
+		</form>
 
-				<!-- Actions -->
-				<div class="flex gap-3 pt-4">
-					<button
-						type="button"
-						on:click={closePopup}
-						class="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors"
-					>
-						Annuler
-					</button>
-					<button
-						type="submit"
-						class="flex-1 px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors"
-					>
-						{editingIndex !== null ? 'Mettre à jour' : 'Enregistrer'}
-					</button>
-				</div>
-			</form>
-		</div>
-	</div>
-{/if}
+		<Dialog.Footer>
+			<Button variant="outline" onclick={closePopup}>Annuler</Button>
+			<Button type="submit" form="event-form">
+				{editingIndex !== null ? 'Mettre à jour' : 'Enregistrer'}
+			</Button>
+		</Dialog.Footer>
+	</Dialog.Content>
+</Dialog.Root>
+
+<!-- Delete Confirmation -->
+<DeleteModal
+	bind:open={deleteModalOpen}
+	title="Supprimer l'événement"
+	message="Cet événement sera définitivement supprimé. Cette action est irréversible."
+	onConfirm={() => {
+		if (deleteTargetIndex !== null) {
+			events = events.filter((_, i) => i !== deleteTargetIndex);
+			deleteTargetIndex = null;
+		}
+	}}
+/>

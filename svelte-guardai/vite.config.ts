@@ -1,8 +1,9 @@
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
+import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
-	plugins: [sveltekit()],
+	plugins: [tailwindcss(), sveltekit()],
 	server: {
 		proxy: {
 			'/api': {
@@ -13,8 +14,8 @@ export default defineConfig({
 			'/ws': {
 				target: 'ws://localhost:8080',
 				ws: true,
-				changeOrigin: true,
-				rewrite: (path) => path.replace(/^\/ws/, '/v1')
+				changeOrigin: true
+				// Pas de rewrite — le backend expose directement /ws/events/stream
 			}
 		}
 	}
