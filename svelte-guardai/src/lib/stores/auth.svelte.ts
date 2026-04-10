@@ -4,6 +4,7 @@
  */
 
 import { writable, derived, get } from 'svelte/store';
+import { browser } from '$app/environment';
 import { loginApi, register } from '$lib/api/auth';
 import { ApiClientError } from '$lib/api/client';
 import { goto } from '$app/navigation';
@@ -13,7 +14,7 @@ const TOKEN_KEY = 'guard_ai_token';
 // ─── State ────────────────────────────────────────────────────────────────────
 
 export const authToken = writable<string | null>(
-	typeof localStorage !== 'undefined' ? localStorage.getItem(TOKEN_KEY) : null
+	browser ? localStorage.getItem(TOKEN_KEY) : null
 );
 
 export const authLoading = writable(false);
@@ -26,7 +27,7 @@ export const isAuthenticated = derived(authToken, ($token) => Boolean($token));
 // ─── Sync token → localStorage ────────────────────────────────────────────────
 
 authToken.subscribe((token) => {
-	if (typeof localStorage === 'undefined') return;
+	if (!browser) return;
 	if (token) {
 		localStorage.setItem(TOKEN_KEY, token);
 	} else {

@@ -9,8 +9,10 @@
 
 	let email = $state('');
 	let password = $state('');
-	let rememberMe = $state(false);
-	let selectedLanguage = $state('fr');
+	let confirmPassword = $state('');
+	let mode = $state<'login' | 'register'>('login');
+
+	let localError = $state('');
 
 	// Redirige si déjà connecté
 	onMount(() => {
@@ -19,19 +21,43 @@
 
 	async function handleSubmit(e: Event) {
 		e.preventDefault();
-		await authStore.login(email, password);
+		localError = '';
+
+		if (mode === 'register') {
+			if (password !== confirmPassword) {
+				localError = 'Les mots de passe ne correspondent pas';
+				return;
+			}
+			if (password.length < 6) {
+				localError = 'Le mot de passe doit contenir au moins 6 caractères';
+				return;
+			}
+			await authStore.register(email, password);
+		} else {
+			await authStore.login(email, password);
+		}
 	}
+
+	function switchMode(newMode: 'login' | 'register') {
+		mode = newMode;
+		localError = '';
+		authError.set(null);
+		password = '';
+		confirmPassword = '';
+	}
+
+	const displayError = $derived(localError || $authError);
 </script>
 
 <div class="min-h-screen bg-gray-50 flex items-center justify-center p-4">
 
 	<!-- Alerte erreur -->
-	{#if $authError}
+	{#if displayError}
 		<div class="fixed top-4 right-4 z-50 min-w-72">
 			<div class="flex items-center gap-3 px-4 py-3 bg-white border border-orange-200 rounded-lg shadow-md text-sm">
 				<TriangleAlert class="h-4 w-4 text-orange-600 shrink-0" />
-				<span class="flex-1 text-orange-800 font-medium">{$authError}</span>
-				<button onclick={() => authError.set(null)} class="text-muted-foreground hover:text-foreground">
+				<span class="flex-1 text-orange-800 font-medium">{displayError}</span>
+				<button onclick={() => { localError = ''; authError.set(null); }} class="text-muted-foreground hover:text-foreground">
 					<X class="h-4 w-4" />
 				</button>
 			</div>
@@ -56,9 +82,27 @@
 			</div>
 		</div>
 
+		<!-- Mode toggle -->
+		<div class="flex rounded-lg border border-border p-1 mb-6">
+			<button
+				onclick={() => switchMode('login')}
+				class="flex-1 py-1.5 text-sm font-medium rounded-md transition-colors {mode === 'login' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}"
+			>
+				Se connecter
+			</button>
+			<button
+				onclick={() => switchMode('register')}
+				class="flex-1 py-1.5 text-sm font-medium rounded-md transition-colors {mode === 'register' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}"
+			>
+				Créer un compte
+			</button>
+		</div>
+
 		<!-- Heading -->
 		<div class="text-center mb-6">
-			<h1 class="text-xl font-semibold text-foreground">Sign in to Guard AI</h1>
+			<h1 class="text-xl font-semibold text-foreground">
+				{mode === 'login' ? 'Sign in to Guard AI' : 'Créer un compte'}
+			</h1>
 			<p class="text-sm text-muted-foreground mt-1">Surveillance intelligente en temps réel</p>
 		</div>
 
@@ -78,9 +122,11 @@
 			<div class="space-y-1.5">
 				<div class="flex items-center justify-between">
 					<Label for="password">Mot de passe</Label>
-					<a href="/forgot-password" class="text-xs text-primary hover:underline font-medium">
-						Mot de passe oublié ?
-					</a>
+					{#if mode === 'login'}
+						<a href="/forgot-password" class="text-xs text-primary hover:underline font-medium">
+							Mot de passe oublié ?
+						</a>
+					{/if}
 				</div>
 				<Input
 					type="password"
@@ -91,35 +137,26 @@
 				/>
 			</div>
 
-			<div class="flex items-center gap-2">
-				<input
-					type="checkbox"
-					id="remember"
-					bind:checked={rememberMe}
-					class="h-4 w-4 rounded border-input accent-primary"
-				/>
-				<Label for="remember" class="text-sm font-normal cursor-pointer">Se souvenir de moi</Label>
-			</div>
+			{#if mode === 'register'}
+				<div class="space-y-1.5">
+					<Label for="confirm-password">Confirmer le mot de passe</Label>
+					<Input
+						type="password"
+						id="confirm-password"
+						bind:value={confirmPassword}
+						placeholder="••••••••"
+						required
+					/>
+				</div>
+			{/if}
 
 			<Button type="submit" class="w-full" disabled={$authLoading}>
-				{$authLoading ? 'Connexion...' : 'Se connecter'}
+				{#if $authLoading}
+					{mode === 'login' ? 'Connexion...' : 'Création...'}
+				{:else}
+					{mode === 'login' ? 'Se connecter' : 'Créer mon compte'}
+				{/if}
 			</Button>
 		</form>
-
-		<!-- Language switcher -->
-		<div class="flex justify-center gap-1 mt-6 pt-4 border-t border-border">
-			<button
-				onclick={() => (selectedLanguage = 'fr')}
-				class="px-2 py-1 text-xs rounded transition-colors {selectedLanguage === 'fr' ? 'font-semibold text-foreground' : 'text-muted-foreground hover:text-foreground'}"
-			>
-				🇫🇷 FR
-			</button>
-			<button
-				onclick={() => (selectedLanguage = 'en')}
-				class="px-2 py-1 text-xs rounded transition-colors {selectedLanguage === 'en' ? 'font-semibold text-foreground' : 'text-muted-foreground hover:text-foreground'}"
-			>
-				🇬🇧 EN
-			</button>
-		</div>
 	</div>
 </div>
