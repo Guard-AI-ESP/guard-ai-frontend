@@ -1,5 +1,9 @@
 <script lang="ts">
 	import Sidebar from '$lib/components/Sidebar.svelte';
+	import * as Card from '$lib/components/ui/card';
+	import { Button } from '$lib/components/ui/button';
+	import { Badge } from '$lib/components/ui/badge';
+import { Zap, MapPin, Clock, Check } from '@lucide/svelte';
 
 	type Detector = {
 		id: string;
@@ -10,246 +14,171 @@
 		lastActivity: Date | null;
 	};
 
-	let detectors: Detector[] = [
+	let detectors = $state<Detector[]>([
 		{ id: '1', name: 'Détecteur Entrée', location: 'Entrée principale', enabled: true, range: '1.2m', lastActivity: new Date('2024-12-11T14:30:00') },
 		{ id: '2', name: 'Détecteur Garage', location: 'Garage', enabled: true, range: '1m', lastActivity: new Date('2024-12-11T12:15:00') },
 		{ id: '3', name: 'Détecteur Jardin', location: 'Portail arrière', enabled: false, range: '1.2m', lastActivity: null },
-	];
+	]);
 
-	let globalEnabled = true;
-	let selectedRange = '1m';
-	let showRangeDropdown = false;
+	let globalEnabled = $state(true);
+	let selectedRange = $state('1m');
+	let saveToast = $state(false);
 
 	const rangeOptions = ['1m', '1.2m', '1.5m', '2m'];
 
-	function toggleGlobalDetectors() {
-		// globalEnabled est déjà mis à jour par bind:checked
-		// On met juste à jour tous les détecteurs
+	const activeCount = $derived(detectors.filter(d => d.enabled).length);
+	const inactiveCount = $derived(detectors.filter(d => !d.enabled).length);
+
+	function toggleGlobal() {
+		globalEnabled = !globalEnabled;
 		detectors = detectors.map(d => ({ ...d, enabled: globalEnabled }));
 	}
 
 	function toggleDetector(id: string) {
-		// La valeur est déjà inversée par bind:checked
-		// On s'assure juste que le tableau est réactif
-		detectors = [...detectors];
-	}
-
-	function selectRange(range: string) {
-		selectedRange = range;
-		showRangeDropdown = false;
+		detectors = detectors.map(d => d.id === id ? { ...d, enabled: !d.enabled } : d);
 	}
 
 	function saveSettings() {
-		console.log('Saving settings:', { detectors, selectedRange });
-		// Afficher un message de succès
-		alert('Paramètres enregistrés avec succès !');
+		saveToast = true;
+		setTimeout(() => (saveToast = false), 3000);
 	}
 
 	function formatDateTime(date: Date | null): string {
 		if (!date) return 'Jamais';
-		return date.toLocaleString('fr-FR', {
-			day: '2-digit',
-			month: '2-digit',
-			year: 'numeric',
-			hour: '2-digit',
-			minute: '2-digit'
-		});
-	}
-
-	function handleClickOutside(event: MouseEvent) {
-		const target = event.target as HTMLElement;
-		if (!target.closest('.range-dropdown-container')) {
-			showRangeDropdown = false;
-		}
+		return date.toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 	}
 </script>
 
-<svelte:window on:click={handleClickOutside} />
-
 <svelte:head>
-	<title>Détecteurs de présence - Guard AI</title>
+	<title>Détecteurs - Guard AI</title>
 </svelte:head>
 
 <div class="flex h-screen bg-gray-50">
-	<!-- Sidebar -->
 	<Sidebar />
 
-	<!-- Main content -->
 	<main class="flex-1 overflow-y-auto">
-		<div class="p-8">
-			<div class="max-w-4xl mx-auto">
-				<h1 class="text-3xl font-bold text-gray-900 mb-8">Détecteurs de présence</h1>
+		<div class="p-8 max-w-4xl mx-auto">
 
-				<!-- Global Status Card -->
-				<div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
+			{#if saveToast}
+				<div class="fixed top-4 right-4 z-50">
+					<div class="flex items-center gap-3 px-4 py-3 bg-white border border-green-200 rounded-lg shadow-md text-sm">
+						<Check class="h-4 w-4 text-green-600 shrink-0" />
+						<span class="text-green-800 font-medium">Paramètres enregistrés</span>
+					</div>
+				</div>
+			{/if}
+
+			<div class="flex items-center justify-between mb-8">
+				<h1 class="text-2xl font-semibold text-foreground">Détecteurs de présence</h1>
+			</div>
+
+			<!-- Global status -->
+			<Card.Root class="mb-4">
+				<Card.Content class="p-6">
 					<div class="flex items-center justify-between">
 						<div class="flex items-center gap-4">
-							<div class="w-12 h-12 rounded-full {globalEnabled ? 'bg-green-100' : 'bg-red-100'} flex items-center justify-center">
-								<svg class="w-6 h-6 {globalEnabled ? 'text-green-600' : 'text-red-600'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-								</svg>
+							<div class="w-10 h-10 rounded-full {globalEnabled ? 'bg-green-100' : 'bg-muted'} flex items-center justify-center">
+								<Zap class="w-5 h-5 {globalEnabled ? 'text-green-600' : 'text-muted-foreground'}" />
 							</div>
 							<div>
-								<h2 class="text-lg font-semibold text-gray-900">Statut des détecteurs de présence</h2>
-								<p class="text-sm text-gray-500">
-									{globalEnabled ? 'Détecteurs activés' : 'Détecteurs désactivés'}
-								</p>
+								<p class="text-sm font-semibold text-foreground">Statut global</p>
+								<p class="text-xs text-muted-foreground">{globalEnabled ? 'Tous les détecteurs sont actifs' : 'Tous les détecteurs sont désactivés'}</p>
 							</div>
 						</div>
-
-						<!-- Toggle Switch -->
-						<label class="relative inline-flex items-center cursor-pointer">
-							<input
-								type="checkbox"
-								bind:checked={globalEnabled}
-								on:change={toggleGlobalDetectors}
-								class="sr-only peer"
-							/>
-							<div class="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-teal-500"></div>
-							<span class="ms-3 text-sm font-medium text-gray-900">
-								{globalEnabled ? 'Désactiver' : 'Activer'} les détecteurs
-							</span>
-						</label>
+						<div class="flex items-center gap-3">
+							<Badge variant="outline" class={globalEnabled ? 'border-green-200 text-green-700 bg-green-50' : 'border-muted text-muted-foreground'}>
+								{globalEnabled ? 'Actifs' : 'Inactifs'}
+							</Badge>
+							<Button variant="outline" size="sm" onclick={toggleGlobal}>
+								{globalEnabled ? 'Tout désactiver' : 'Tout activer'}
+							</Button>
+						</div>
 					</div>
-				</div>
+				</Card.Content>
+			</Card.Root>
 
-				<!-- Range Settings Card -->
-				<div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
-					<h2 class="text-lg font-semibold text-gray-900 mb-4">Paramètres de portée</h2>
-
-					<div class="flex items-center gap-4">
-						<span class="text-sm text-gray-600">Portée par défaut :</span>
-
-						<!-- Custom Dropdown -->
-						<div class="relative range-dropdown-container">
-							<button
-								type="button"
-								on:click|stopPropagation={() => showRangeDropdown = !showRangeDropdown}
-								class="inline-flex justify-center items-center gap-x-2 rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition-colors min-w-[120px]"
+			<!-- Range settings -->
+			<Card.Root class="mb-4">
+				<Card.Header class="pb-3">
+					<Card.Title class="text-base">Portée par défaut</Card.Title>
+					<Card.Description>Appliquée aux nouveaux détecteurs</Card.Description>
+				</Card.Header>
+				<Card.Content>
+					<div class="flex items-center gap-3">
+						{#each rangeOptions as opt}
+							<Button
+								variant={selectedRange === opt ? 'default' : 'outline'}
+								size="sm"
+								onclick={() => (selectedRange = opt)}
 							>
-								<span>Portée: {selectedRange}</span>
-								<svg class="w-5 h-5 text-gray-400 transition-transform {showRangeDropdown ? 'rotate-180' : ''}" fill="currentColor" viewBox="0 0 20 20">
-									<path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
-								</svg>
-							</button>
-
-							{#if showRangeDropdown}
-								<div class="absolute z-50 mt-2 w-full origin-top-right rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-									<div class="py-1">
-										{#each rangeOptions as option}
-											<button
-												type="button"
-												on:click={() => selectRange(option)}
-												class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-teal-50 hover:text-teal-700 transition-colors {selectedRange === option ? 'bg-teal-50 text-teal-700 font-semibold' : ''}"
-											>
-												{option}
-											</button>
-										{/each}
-									</div>
-								</div>
-							{/if}
-						</div>
-
-						<div class="flex-1 flex items-center gap-2 text-xs text-gray-500">
-							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-							</svg>
-							<span>Cette portée sera appliquée à tous les nouveaux détecteurs</span>
-						</div>
+								{opt}
+							</Button>
+						{/each}
 					</div>
-				</div>
+				</Card.Content>
+			</Card.Root>
 
-				<!-- Individual Detectors List -->
-				<div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mb-6">
-					<div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-						<h2 class="text-lg font-semibold text-gray-900">Détecteurs installés</h2>
-					</div>
-
-					<div class="divide-y divide-gray-200">
+			<!-- Detectors list -->
+			<Card.Root class="mb-6">
+				<Card.Header class="pb-3">
+					<Card.Title class="text-base">Détecteurs installés</Card.Title>
+				</Card.Header>
+				<Card.Content class="p-0">
+					<div class="divide-y divide-border">
 						{#each detectors as detector (detector.id)}
-							<div class="p-6 hover:bg-gray-50 transition-colors">
-								<div class="flex items-center justify-between">
-									<!-- Detector Info -->
-									<div class="flex items-center gap-4 flex-1">
-										<div class="w-10 h-10 rounded-full {detector.enabled ? 'bg-green-100' : 'bg-gray-100'} flex items-center justify-center">
-											<svg class="w-5 h-5 {detector.enabled ? 'text-green-600' : 'text-gray-400'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-											</svg>
-										</div>
-
-										<div class="flex-1">
-											<h3 class="text-sm font-semibold text-gray-900">{detector.name}</h3>
-											<div class="flex items-center gap-4 mt-1">
-												<span class="text-xs text-gray-500 flex items-center gap-1">
-													<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-													</svg>
-													{detector.location}
-												</span>
-												<span class="text-xs text-gray-500 flex items-center gap-1">
-													<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-													</svg>
-													Portée: {detector.range}
-												</span>
-												<span class="text-xs text-gray-500 flex items-center gap-1">
-													<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-													</svg>
-													Dernière activité: {formatDateTime(detector.lastActivity)}
-												</span>
-											</div>
+							<div class="flex items-center justify-between px-6 py-4 hover:bg-muted/30 transition-colors">
+								<div class="flex items-center gap-4">
+									<div class="w-9 h-9 rounded-full {detector.enabled ? 'bg-green-100' : 'bg-muted'} flex items-center justify-center shrink-0">
+										<Zap class="w-4 h-4 {detector.enabled ? 'text-green-600' : 'text-muted-foreground'}" />
+									</div>
+									<div>
+										<p class="text-sm font-medium text-foreground">{detector.name}</p>
+										<div class="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">
+											<span class="flex items-center gap-1"><MapPin class="w-3 h-3" />{detector.location}</span>
+											<span>Portée: {detector.range}</span>
+											<span class="flex items-center gap-1"><Clock class="w-3 h-3" />{formatDateTime(detector.lastActivity)}</span>
 										</div>
 									</div>
-
-									<!-- Toggle Switch -->
-									<label class="relative inline-flex items-center cursor-pointer">
-										<input
-											type="checkbox"
-											bind:checked={detector.enabled}
-											on:change={() => toggleDetector(detector.id)}
-											class="sr-only peer"
-										/>
-										<div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-500"></div>
-									</label>
 								</div>
+								<button
+									onclick={() => toggleDetector(detector.id)}
+									aria-label="Activer/désactiver {detector.name}"
+									class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus:outline-none {detector.enabled ? 'bg-primary' : 'bg-input'}"
+									role="switch"
+									aria-checked={detector.enabled}
+								>
+									<span class="pointer-events-none block h-4 w-4 rounded-full bg-white shadow-lg transition-transform {detector.enabled ? 'translate-x-4' : 'translate-x-0'}"></span>
+								</button>
 							</div>
 						{/each}
 					</div>
-				</div>
+				</Card.Content>
+			</Card.Root>
 
-				<!-- Save Button -->
-				<div class="flex justify-center">
-					<button
-						on:click={saveSettings}
-						class="px-8 py-3 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all inline-flex items-center gap-2"
-					>
-						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-						</svg>
-						Enregistrer les paramètres
-					</button>
-				</div>
-
-				<!-- Stats Cards -->
-				<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-					<div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-						<h3 class="text-sm text-gray-500 mb-2">Détecteurs actifs</h3>
-						<p class="text-4xl font-bold text-green-600">{detectors.filter(d => d.enabled).length}</p>
-					</div>
-
-					<div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-						<h3 class="text-sm text-gray-500 mb-2">Détecteurs inactifs</h3>
-						<p class="text-4xl font-bold text-gray-600">{detectors.filter(d => !d.enabled).length}</p>
-					</div>
-
-					<div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-						<h3 class="text-sm text-gray-500 mb-2">Total installés</h3>
-						<p class="text-4xl font-bold text-teal-600">{detectors.length}</p>
-					</div>
-				</div>
+			<div class="flex justify-end mb-8">
+				<Button onclick={saveSettings}>
+					<Check class="w-4 h-4 mr-1.5" /> Enregistrer
+				</Button>
 			</div>
+
+			<!-- Stats -->
+			<div class="grid grid-cols-3 gap-4">
+				{#each [
+					{ label: 'Actifs', value: activeCount, color: 'text-green-600' },
+					{ label: 'Inactifs', value: inactiveCount, color: 'text-muted-foreground' },
+					{ label: 'Total', value: detectors.length, color: 'text-primary' }
+				] as stat}
+					<Card.Root>
+						<Card.Header class="pb-2">
+							<Card.Description>{stat.label}</Card.Description>
+						</Card.Header>
+						<Card.Content>
+							<p class="text-4xl font-bold tracking-tight {stat.color}">{stat.value}</p>
+						</Card.Content>
+					</Card.Root>
+				{/each}
+			</div>
+
 		</div>
 	</main>
 </div>

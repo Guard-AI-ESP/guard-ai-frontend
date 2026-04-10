@@ -1,208 +1,167 @@
 <script lang="ts">
 	import Sidebar from '$lib/components/Sidebar.svelte';
+	import DeleteModal from '$lib/components/DeleteModal.svelte';
+	import * as Card from '$lib/components/ui/card';
+	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
+	import { Label } from '$lib/components/ui/label';
+	import { Badge } from '$lib/components/ui/badge';
 	import { onMount } from 'svelte';
+	import {
+		Bell, Shield, Video, User, MessageSquare, Palette, Clock, Check, RotateCcw
+	} from '@lucide/svelte';
 
 	// Notifications & Alertes
-	let pushNotifications = true;
-	let emailAlerts = false;
-	let smsAlerts = false;
-	let soundEnabled = true;
-	let vibrationEnabled = true;
-	let alertEmail = '';
-	let alertPhone = '';
+	let pushNotifications = $state(true);
+	let emailAlerts = $state(false);
+	let smsAlerts = $state(false);
+	let soundEnabled = $state(true);
+	let vibrationEnabled = $state(true);
+	let alertEmail = $state('');
+	let alertPhone = $state('');
 
 	// Sécurité & Confidentialité
-	let currentPassword = '';
-	let newPassword = '';
-	let confirmPassword = '';
-	let pinCode = '';
-	let twoFactorEnabled = false;
-	let connectedDevices = [
+	let currentPassword = $state('');
+	let newPassword = $state('');
+	let confirmPassword = $state('');
+	let pinCode = $state('');
+	let twoFactorEnabled = $state(false);
+	let connectedDevices = $state([
 		{ id: '1', name: 'iPhone 13', lastActive: '2024-12-12T10:30:00', location: 'Paris, France' },
 		{ id: '2', name: 'MacBook Pro', lastActive: '2024-12-11T18:45:00', location: 'Paris, France' }
-	];
+	]);
 
 	// Caméras & Enregistrements
-	let videoQuality = '1080p';
-	let retentionDays = 30;
-	let storageType = 'cloud';
-	let nightVisionEnabled = true;
-	let motionDetectionSensitivity = 'medium';
+	let videoQuality = $state('1080p');
+	let retentionDays = $state(30);
+	let storageType = $state('cloud');
+	let nightVisionEnabled = $state(true);
+	let motionDetectionSensitivity = $state('medium');
 
 	// Profil
-	let profilePicFile: File | null = null;
-	let profilePicPreview = '';
-	let userEmail = '';
-	let userPhone = '';
-	let userName = '';
+	let profilePicPreview = $state('');
+	let userEmail = $state('');
+	let userPhone = $state('');
+	let userName = $state('');
 
 	// Interphone
-	let customMessage = '';
-	let intercomVolume = 80;
+	let customMessage = $state('');
+	let intercomVolume = $state(80);
 
 	// Apparence
-	let selectedTheme = 'light';
-	let selectedLanguage = 'fr';
+	let selectedTheme = $state('light');
+	let selectedLanguage = $state('fr');
 
 	// Automatisation
-	let autoScheduleEnabled = false;
-	let scheduleStartTime = '22:00';
-	let scheduleEndTime = '07:00';
-	let vacationModeEnabled = false;
-	let vacationStartDate = '';
-	let vacationEndDate = '';
+	let autoScheduleEnabled = $state(false);
+	let scheduleStartTime = $state('22:00');
+	let scheduleEndTime = $state('07:00');
+	let vacationModeEnabled = $state(false);
+	let vacationStartDate = $state('');
+	let vacationEndDate = $state('');
 
-	// Load saved settings from localStorage on mount
+	// UI
+	let saveToast = $state(false);
+	let passwordError = $state('');
+	let showDisconnectModal = $state(false);
+	let deviceToDisconnect = $state<{ id: string; name: string } | null>(null);
+	let showResetModal = $state(false);
+
 	onMount(() => {
 		const savedSettings = localStorage.getItem('guardai-settings');
-		if (savedSettings) {
-			const settings = JSON.parse(savedSettings);
+		if (!savedSettings) return;
+		const s = JSON.parse(savedSettings);
 
-			// Notifications
-			pushNotifications = settings.pushNotifications ?? true;
-			emailAlerts = settings.emailAlerts ?? false;
-			smsAlerts = settings.smsAlerts ?? false;
-			soundEnabled = settings.soundEnabled ?? true;
-			vibrationEnabled = settings.vibrationEnabled ?? true;
-			alertEmail = settings.alertEmail || '';
-			alertPhone = settings.alertPhone || '';
-
-			// Sécurité
-			pinCode = settings.pinCode || '';
-			twoFactorEnabled = settings.twoFactorEnabled ?? false;
-
-			// Caméras
-			videoQuality = settings.videoQuality || '1080p';
-			retentionDays = settings.retentionDays || 30;
-			storageType = settings.storageType || 'cloud';
-			nightVisionEnabled = settings.nightVisionEnabled ?? true;
-			motionDetectionSensitivity = settings.motionDetectionSensitivity || 'medium';
-
-			// Profil
-			profilePicPreview = settings.profilePicPreview || '';
-			userEmail = settings.userEmail || '';
-			userPhone = settings.userPhone || '';
-			userName = settings.userName || '';
-
-			// Interphone
-			customMessage = settings.customMessage || '';
-			intercomVolume = settings.intercomVolume || 80;
-
-			// Apparence
-			selectedTheme = settings.theme || 'light';
-			selectedLanguage = settings.language || 'fr';
-
-			// Automatisation
-			autoScheduleEnabled = settings.autoScheduleEnabled ?? false;
-			scheduleStartTime = settings.scheduleStartTime || '22:00';
-			scheduleEndTime = settings.scheduleEndTime || '07:00';
-			vacationModeEnabled = settings.vacationModeEnabled ?? false;
-			vacationStartDate = settings.vacationStartDate || '';
-			vacationEndDate = settings.vacationEndDate || '';
-		}
+		pushNotifications = s.pushNotifications ?? true;
+		emailAlerts = s.emailAlerts ?? false;
+		smsAlerts = s.smsAlerts ?? false;
+		soundEnabled = s.soundEnabled ?? true;
+		vibrationEnabled = s.vibrationEnabled ?? true;
+		alertEmail = s.alertEmail || '';
+		alertPhone = s.alertPhone || '';
+		pinCode = s.pinCode || '';
+		twoFactorEnabled = s.twoFactorEnabled ?? false;
+		videoQuality = s.videoQuality || '1080p';
+		retentionDays = s.retentionDays || 30;
+		storageType = s.storageType || 'cloud';
+		nightVisionEnabled = s.nightVisionEnabled ?? true;
+		motionDetectionSensitivity = s.motionDetectionSensitivity || 'medium';
+		profilePicPreview = s.profilePicPreview || '';
+		userEmail = s.userEmail || '';
+		userPhone = s.userPhone || '';
+		userName = s.userName || '';
+		customMessage = s.customMessage || '';
+		intercomVolume = s.intercomVolume || 80;
+		selectedTheme = s.theme || 'light';
+		selectedLanguage = s.language || 'fr';
+		autoScheduleEnabled = s.autoScheduleEnabled ?? false;
+		scheduleStartTime = s.scheduleStartTime || '22:00';
+		scheduleEndTime = s.scheduleEndTime || '07:00';
+		vacationModeEnabled = s.vacationModeEnabled ?? false;
+		vacationStartDate = s.vacationStartDate || '';
+		vacationEndDate = s.vacationEndDate || '';
 	});
 
 	function handleProfilePicChange(event: Event) {
-		const target = event.target as HTMLInputElement;
-		const file = target.files?.[0];
-
-		if (file) {
-			profilePicFile = file;
-			const reader = new FileReader();
-			reader.onload = (e) => {
-				profilePicPreview = e.target?.result as string;
-			};
-			reader.readAsDataURL(file);
-		}
+		const file = (event.target as HTMLInputElement).files?.[0];
+		if (!file) return;
+		const reader = new FileReader();
+		reader.onload = (e) => { profilePicPreview = e.target?.result as string; };
+		reader.readAsDataURL(file);
 	}
 
-	function saveSettings() {
-		const settings = {
-			// Notifications
-			pushNotifications,
-			emailAlerts,
-			smsAlerts,
-			soundEnabled,
-			vibrationEnabled,
-			alertEmail,
-			alertPhone,
-
-			// Sécurité
-			pinCode,
-			twoFactorEnabled,
-
-			// Caméras
-			videoQuality,
-			retentionDays,
-			storageType,
-			nightVisionEnabled,
-			motionDetectionSensitivity,
-
-			// Profil
-			profilePicPreview,
-			userEmail,
-			userPhone,
-			userName,
-
-			// Interphone
-			customMessage,
-			intercomVolume,
-
-			// Apparence
-			theme: selectedTheme,
-			language: selectedLanguage,
-
-			// Automatisation
-			autoScheduleEnabled,
-			scheduleStartTime,
-			scheduleEndTime,
-			vacationModeEnabled,
-			vacationStartDate,
-			vacationEndDate
-		};
-
-		localStorage.setItem('guardai-settings', JSON.stringify(settings));
-		alert('Paramètres enregistrés avec succès !');
+	function saveSettings(e: Event) {
+		e.preventDefault();
+		localStorage.setItem('guardai-settings', JSON.stringify({
+			pushNotifications, emailAlerts, smsAlerts, soundEnabled, vibrationEnabled,
+			alertEmail, alertPhone, pinCode, twoFactorEnabled, videoQuality, retentionDays,
+			storageType, nightVisionEnabled, motionDetectionSensitivity, profilePicPreview,
+			userEmail, userPhone, userName, customMessage, intercomVolume,
+			theme: selectedTheme, language: selectedLanguage, autoScheduleEnabled,
+			scheduleStartTime, scheduleEndTime, vacationModeEnabled, vacationStartDate, vacationEndDate
+		}));
+		saveToast = true;
+		setTimeout(() => (saveToast = false), 3000);
 	}
 
-	function resetSettings() {
-		if (confirm('Êtes-vous sûr de vouloir réinitialiser tous les paramètres ?')) {
-			localStorage.removeItem('guardai-settings');
-			location.reload();
-		}
+	function confirmReset() {
+		localStorage.removeItem('guardai-settings');
+		location.reload();
 	}
 
 	function changePassword() {
+		passwordError = '';
 		if (!currentPassword || !newPassword || !confirmPassword) {
-			alert('Veuillez remplir tous les champs');
+			passwordError = 'Veuillez remplir tous les champs';
 			return;
 		}
 		if (newPassword !== confirmPassword) {
-			alert('Les mots de passe ne correspondent pas');
+			passwordError = 'Les mots de passe ne correspondent pas';
 			return;
 		}
-		// Simulate password change
-		alert('Mot de passe changé avec succès !');
 		currentPassword = '';
 		newPassword = '';
 		confirmPassword = '';
+		saveToast = true;
+		setTimeout(() => (saveToast = false), 3000);
 	}
 
-	function disconnectDevice(deviceId: string) {
-		if (confirm('Êtes-vous sûr de vouloir déconnecter cet appareil ?')) {
-			connectedDevices = connectedDevices.filter(d => d.id !== deviceId);
-			alert('Appareil déconnecté avec succès');
+	function openDisconnectModal(device: { id: string; name: string }) {
+		deviceToDisconnect = device;
+		showDisconnectModal = true;
+	}
+
+	function confirmDisconnect() {
+		if (deviceToDisconnect) {
+			connectedDevices = connectedDevices.filter(d => d.id !== deviceToDisconnect!.id);
+			deviceToDisconnect = null;
 		}
 	}
 
 	function formatDateTime(dateString: string): string {
-		const date = new Date(dateString);
-		return date.toLocaleString('fr-FR', {
-			day: '2-digit',
-			month: '2-digit',
-			year: 'numeric',
-			hour: '2-digit',
-			minute: '2-digit'
+		return new Date(dateString).toLocaleString('fr-FR', {
+			day: '2-digit', month: '2-digit', year: 'numeric',
+			hour: '2-digit', minute: '2-digit'
 		});
 	}
 </script>
@@ -212,679 +171,535 @@
 </svelte:head>
 
 <div class="flex h-screen bg-gray-50">
-	<!-- Sidebar -->
 	<Sidebar />
 
-	<!-- Main content -->
 	<main class="flex-1 overflow-y-auto">
-		<div class="p-8">
-			<div class="max-w-5xl mx-auto">
-				<div class="text-center mb-8">
-					<h1 class="text-3xl font-bold text-gray-900">Paramètres</h1>
-					<p class="text-gray-500 mt-2">Gérez vos préférences et la configuration de votre système</p>
+		<div class="p-8 max-w-4xl mx-auto">
+
+			{#if saveToast}
+				<div class="fixed top-4 right-4 z-50">
+					<div class="flex items-center gap-3 px-4 py-3 bg-white border border-green-200 rounded-lg shadow-md text-sm">
+						<Check class="h-4 w-4 text-green-600 shrink-0" />
+						<span class="text-green-800 font-medium">Paramètres enregistrés</span>
+					</div>
+				</div>
+			{/if}
+
+			<div class="mb-8">
+				<h1 class="text-2xl font-semibold text-foreground">Paramètres</h1>
+				<p class="text-sm text-muted-foreground mt-1">Gérez vos préférences et la configuration de votre système</p>
+			</div>
+
+			<form onsubmit={saveSettings} class="space-y-6">
+
+				<!-- Notifications -->
+				<Card.Root>
+					<Card.Header>
+						<div class="flex items-center gap-3">
+							<div class="w-9 h-9 rounded-lg bg-orange-100 flex items-center justify-center shrink-0">
+								<Bell class="w-4 h-4 text-orange-600" />
+							</div>
+							<Card.Title class="text-base">Notifications & Alertes</Card.Title>
+						</div>
+					</Card.Header>
+					<Card.Content class="space-y-1">
+						<!-- Push -->
+						<div class="flex items-center justify-between px-3 py-3 hover:bg-muted/30 rounded-lg transition-colors">
+							<div>
+								<p class="text-sm font-medium text-foreground">Notifications push</p>
+								<p class="text-xs text-muted-foreground">Recevoir des notifications sur cet appareil</p>
+							</div>
+							<button
+								type="button"
+								onclick={() => (pushNotifications = !pushNotifications)}
+								aria-label="Notifications push"
+								class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus:outline-none {pushNotifications ? 'bg-primary' : 'bg-input'}"
+								role="switch"
+								aria-checked={pushNotifications}
+							>
+								<span class="pointer-events-none block h-4 w-4 rounded-full bg-white shadow-lg transition-transform {pushNotifications ? 'translate-x-4' : 'translate-x-0'}"></span>
+							</button>
+						</div>
+
+						<!-- Email -->
+						<div class="flex items-center justify-between px-3 py-3 hover:bg-muted/30 rounded-lg transition-colors">
+							<div>
+								<p class="text-sm font-medium text-foreground">Alertes par email</p>
+								<p class="text-xs text-muted-foreground">Recevoir des alertes importantes par email</p>
+							</div>
+							<button
+								type="button"
+								onclick={() => (emailAlerts = !emailAlerts)}
+								aria-label="Alertes par email"
+								class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus:outline-none {emailAlerts ? 'bg-primary' : 'bg-input'}"
+								role="switch"
+								aria-checked={emailAlerts}
+							>
+								<span class="pointer-events-none block h-4 w-4 rounded-full bg-white shadow-lg transition-transform {emailAlerts ? 'translate-x-4' : 'translate-x-0'}"></span>
+							</button>
+						</div>
+						{#if emailAlerts}
+							<div class="ml-6 px-3">
+								<Input type="email" bind:value={alertEmail} placeholder="email@exemple.com" class="mt-1" />
+							</div>
+						{/if}
+
+						<!-- SMS -->
+						<div class="flex items-center justify-between px-3 py-3 hover:bg-muted/30 rounded-lg transition-colors">
+							<div>
+								<p class="text-sm font-medium text-foreground">Alertes par SMS</p>
+								<p class="text-xs text-muted-foreground">Recevoir des alertes critiques par SMS</p>
+							</div>
+							<button
+								type="button"
+								onclick={() => (smsAlerts = !smsAlerts)}
+								aria-label="Alertes par SMS"
+								class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus:outline-none {smsAlerts ? 'bg-primary' : 'bg-input'}"
+								role="switch"
+								aria-checked={smsAlerts}
+							>
+								<span class="pointer-events-none block h-4 w-4 rounded-full bg-white shadow-lg transition-transform {smsAlerts ? 'translate-x-4' : 'translate-x-0'}"></span>
+							</button>
+						</div>
+						{#if smsAlerts}
+							<div class="ml-6 px-3">
+								<Input type="tel" bind:value={alertPhone} placeholder="+33 6 12 34 56 78" class="mt-1" />
+							</div>
+						{/if}
+
+						<!-- Sound -->
+						<div class="flex items-center justify-between px-3 py-3 hover:bg-muted/30 rounded-lg transition-colors">
+							<div>
+								<p class="text-sm font-medium text-foreground">Sons</p>
+								<p class="text-xs text-muted-foreground">Jouer un son pour les notifications</p>
+							</div>
+							<button
+								type="button"
+								onclick={() => (soundEnabled = !soundEnabled)}
+								aria-label="Sons"
+								class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus:outline-none {soundEnabled ? 'bg-primary' : 'bg-input'}"
+								role="switch"
+								aria-checked={soundEnabled}
+							>
+								<span class="pointer-events-none block h-4 w-4 rounded-full bg-white shadow-lg transition-transform {soundEnabled ? 'translate-x-4' : 'translate-x-0'}"></span>
+							</button>
+						</div>
+
+						<!-- Vibration -->
+						<div class="flex items-center justify-between px-3 py-3 hover:bg-muted/30 rounded-lg transition-colors">
+							<div>
+								<p class="text-sm font-medium text-foreground">Vibrations</p>
+								<p class="text-xs text-muted-foreground">Vibrer pour les notifications</p>
+							</div>
+							<button
+								type="button"
+								onclick={() => (vibrationEnabled = !vibrationEnabled)}
+								aria-label="Vibrations"
+								class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus:outline-none {vibrationEnabled ? 'bg-primary' : 'bg-input'}"
+								role="switch"
+								aria-checked={vibrationEnabled}
+							>
+								<span class="pointer-events-none block h-4 w-4 rounded-full bg-white shadow-lg transition-transform {vibrationEnabled ? 'translate-x-4' : 'translate-x-0'}"></span>
+							</button>
+						</div>
+					</Card.Content>
+				</Card.Root>
+
+				<!-- Sécurité -->
+				<Card.Root>
+					<Card.Header>
+						<div class="flex items-center gap-3">
+							<div class="w-9 h-9 rounded-lg bg-red-100 flex items-center justify-center shrink-0">
+								<Shield class="w-4 h-4 text-red-600" />
+							</div>
+							<Card.Title class="text-base">Sécurité & Confidentialité</Card.Title>
+						</div>
+					</Card.Header>
+					<Card.Content class="space-y-5">
+
+						<!-- Change password -->
+						<div class="border border-border rounded-lg p-4 space-y-3">
+							<p class="text-sm font-semibold text-foreground">Changer le mot de passe</p>
+							{#if passwordError}
+								<p class="text-xs text-destructive">{passwordError}</p>
+							{/if}
+							<Input type="password" bind:value={currentPassword} placeholder="Mot de passe actuel" />
+							<Input type="password" bind:value={newPassword} placeholder="Nouveau mot de passe" />
+							<Input type="password" bind:value={confirmPassword} placeholder="Confirmer le nouveau mot de passe" />
+							<Button type="button" variant="outline" class="w-full" onclick={changePassword}>
+								Changer le mot de passe
+							</Button>
+						</div>
+
+						<!-- PIN -->
+						<div class="space-y-1.5">
+							<Label for="pin-code">Code PIN (4 chiffres)</Label>
+							<Input
+								id="pin-code"
+								type="text"
+								bind:value={pinCode}
+								maxlength={4}
+								placeholder="••••"
+							/>
+							<p class="text-xs text-muted-foreground">Utilisé pour un accès rapide à l'application</p>
+						</div>
+
+						<!-- 2FA -->
+						<div class="flex items-center justify-between px-3 py-3 hover:bg-muted/30 rounded-lg transition-colors">
+							<div>
+								<p class="text-sm font-medium text-foreground">Authentification à deux facteurs</p>
+								<p class="text-xs text-muted-foreground">Sécurité renforcée pour votre compte</p>
+							</div>
+							<button
+								type="button"
+								onclick={() => (twoFactorEnabled = !twoFactorEnabled)}
+								aria-label="Authentification à deux facteurs"
+								class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus:outline-none {twoFactorEnabled ? 'bg-primary' : 'bg-input'}"
+								role="switch"
+								aria-checked={twoFactorEnabled}
+							>
+								<span class="pointer-events-none block h-4 w-4 rounded-full bg-white shadow-lg transition-transform {twoFactorEnabled ? 'translate-x-4' : 'translate-x-0'}"></span>
+							</button>
+						</div>
+
+						<!-- Connected devices -->
+						<div class="border border-border rounded-lg p-4">
+							<p class="text-sm font-semibold text-foreground mb-3">Appareils connectés</p>
+							<div class="space-y-3">
+								{#each connectedDevices as device (device.id)}
+									<div class="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+										<div class="flex-1">
+											<p class="text-sm font-medium text-foreground">{device.name}</p>
+											<p class="text-xs text-muted-foreground">Dernière activité : {formatDateTime(device.lastActive)}</p>
+											<p class="text-xs text-muted-foreground">{device.location}</p>
+										</div>
+										<Button
+											type="button"
+											variant="ghost"
+											size="sm"
+											class="text-destructive hover:text-destructive hover:bg-destructive/10"
+											onclick={() => openDisconnectModal(device)}
+										>
+											Déconnecter
+										</Button>
+									</div>
+								{/each}
+							</div>
+						</div>
+					</Card.Content>
+				</Card.Root>
+
+				<!-- Caméras -->
+				<Card.Root>
+					<Card.Header>
+						<div class="flex items-center gap-3">
+							<div class="w-9 h-9 rounded-lg bg-purple-100 flex items-center justify-center shrink-0">
+								<Video class="w-4 h-4 text-purple-600" />
+							</div>
+							<Card.Title class="text-base">Caméras & Enregistrements</Card.Title>
+						</div>
+					</Card.Header>
+					<Card.Content class="space-y-5">
+
+						<div class="space-y-1.5">
+							<Label for="video-quality">Qualité vidéo</Label>
+							<select
+								id="video-quality"
+								bind:value={videoQuality}
+								class="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+							>
+								<option value="720p">720p (HD)</option>
+								<option value="1080p">1080p (Full HD)</option>
+								<option value="1440p">1440p (2K)</option>
+								<option value="2160p">2160p (4K)</option>
+							</select>
+						</div>
+
+						<div class="space-y-1.5">
+							<Label for="retention-days">Durée de conservation (jours)</Label>
+							<Input id="retention-days" type="number" bind:value={retentionDays} min={7} max={365} />
+							<p class="text-xs text-muted-foreground">Les enregistrements seront automatiquement supprimés après cette période</p>
+						</div>
+
+						<!-- Storage type -->
+						<div class="space-y-2">
+							<Label>Type de stockage</Label>
+							<div class="grid grid-cols-2 gap-3">
+								{#each [{ value: 'cloud', label: 'Cloud', desc: 'Stockage en ligne sécurisé' }, { value: 'local', label: 'Local', desc: 'Sur cet appareil uniquement' }] as opt}
+									<label class="flex items-center p-3 border-2 rounded-lg cursor-pointer transition-all {storageType === opt.value ? 'border-primary bg-primary/5' : 'border-border hover:border-muted-foreground'}">
+										<input type="radio" bind:group={storageType} value={opt.value} class="w-4 h-4 accent-primary" />
+										<div class="ml-3">
+											<p class="text-sm font-medium text-foreground">{opt.label}</p>
+											<p class="text-xs text-muted-foreground">{opt.desc}</p>
+										</div>
+									</label>
+								{/each}
+							</div>
+						</div>
+
+						<!-- Night vision -->
+						<div class="flex items-center justify-between px-3 py-3 hover:bg-muted/30 rounded-lg transition-colors">
+							<div>
+								<p class="text-sm font-medium text-foreground">Vision nocturne</p>
+								<p class="text-xs text-muted-foreground">Activer automatiquement en basse lumière</p>
+							</div>
+							<button
+								type="button"
+								onclick={() => (nightVisionEnabled = !nightVisionEnabled)}
+								aria-label="Vision nocturne"
+								class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus:outline-none {nightVisionEnabled ? 'bg-primary' : 'bg-input'}"
+								role="switch"
+								aria-checked={nightVisionEnabled}
+							>
+								<span class="pointer-events-none block h-4 w-4 rounded-full bg-white shadow-lg transition-transform {nightVisionEnabled ? 'translate-x-4' : 'translate-x-0'}"></span>
+							</button>
+						</div>
+
+						<div class="space-y-1.5">
+							<Label for="motion-sensitivity">Sensibilité de détection de mouvement</Label>
+							<select
+								id="motion-sensitivity"
+								bind:value={motionDetectionSensitivity}
+								class="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+							>
+								<option value="low">Faible</option>
+								<option value="medium">Moyenne</option>
+								<option value="high">Élevée</option>
+							</select>
+						</div>
+					</Card.Content>
+				</Card.Root>
+
+				<!-- Profil -->
+				<Card.Root>
+					<Card.Header>
+						<div class="flex items-center gap-3">
+							<div class="w-9 h-9 rounded-lg bg-teal-100 flex items-center justify-center shrink-0">
+								<User class="w-4 h-4 text-teal-600" />
+							</div>
+							<Card.Title class="text-base">Profil</Card.Title>
+						</div>
+					</Card.Header>
+					<Card.Content class="space-y-5">
+
+						<!-- Avatar -->
+						<div class="flex items-center gap-4">
+							{#if profilePicPreview}
+								<img src={profilePicPreview} alt="Profile" class="w-16 h-16 rounded-full object-cover border border-border" />
+							{:else}
+								<div class="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+									<User class="w-8 h-8 text-muted-foreground" />
+								</div>
+							{/if}
+							<label class="cursor-pointer">
+								<Button type="button" variant="outline" size="sm" onclick={() => {}}>
+									Choisir une photo
+								</Button>
+								<input type="file" accept="image/*" onchange={handleProfilePicChange} class="hidden" />
+							</label>
+						</div>
+
+						<div class="space-y-1.5">
+							<Label for="user-name">Nom</Label>
+							<Input id="user-name" type="text" bind:value={userName} placeholder="Votre nom" />
+						</div>
+						<div class="space-y-1.5">
+							<Label for="user-email">Email</Label>
+							<Input id="user-email" type="email" bind:value={userEmail} placeholder="exemple@mail.com" />
+						</div>
+						<div class="space-y-1.5">
+							<Label for="user-phone">Numéro de téléphone</Label>
+							<Input id="user-phone" type="tel" bind:value={userPhone} placeholder="+33 6 12 34 56 78" />
+						</div>
+					</Card.Content>
+				</Card.Root>
+
+				<!-- Interphone -->
+				<Card.Root>
+					<Card.Header>
+						<div class="flex items-center gap-3">
+							<div class="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
+								<MessageSquare class="w-4 h-4 text-blue-600" />
+							</div>
+							<Card.Title class="text-base">Interphone</Card.Title>
+						</div>
+					</Card.Header>
+					<Card.Content class="space-y-5">
+						<div class="space-y-1.5">
+							<Label for="custom-message">Message personnalisé</Label>
+							<textarea
+								id="custom-message"
+								bind:value={customMessage}
+								rows={4}
+								placeholder="Votre message personnalisé..."
+								class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring resize-none"
+							></textarea>
+							<p class="text-xs text-muted-foreground">Ce message sera affiché sur l'interphone quand quelqu'un sonne</p>
+						</div>
+
+						<div class="space-y-2">
+							<Label for="intercom-volume">Volume : {intercomVolume}%</Label>
+							<input
+								id="intercom-volume"
+								type="range"
+								bind:value={intercomVolume}
+								min={0}
+								max={100}
+								step={5}
+								class="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
+							/>
+						</div>
+					</Card.Content>
+				</Card.Root>
+
+				<!-- Apparence -->
+				<Card.Root>
+					<Card.Header>
+						<div class="flex items-center gap-3">
+							<div class="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center shrink-0">
+								<Palette class="w-4 h-4 text-indigo-600" />
+							</div>
+							<Card.Title class="text-base">Apparence</Card.Title>
+						</div>
+					</Card.Header>
+					<Card.Content>
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+							<div class="space-y-1.5">
+								<Label for="theme-select">Thème</Label>
+								<select
+									id="theme-select"
+									bind:value={selectedTheme}
+									class="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+								>
+									<option value="light">Clair</option>
+									<option value="dark">Sombre</option>
+									<option value="auto">Automatique</option>
+								</select>
+							</div>
+							<div class="space-y-1.5">
+								<Label for="language-select">Langue</Label>
+								<select
+									id="language-select"
+									bind:value={selectedLanguage}
+									class="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+								>
+									<option value="fr">Français</option>
+									<option value="en">English</option>
+									<option value="es">Español</option>
+									<option value="de">Deutsch</option>
+								</select>
+							</div>
+						</div>
+					</Card.Content>
+				</Card.Root>
+
+				<!-- Automatisation -->
+				<Card.Root>
+					<Card.Header>
+						<div class="flex items-center gap-3">
+							<div class="w-9 h-9 rounded-lg bg-green-100 flex items-center justify-center shrink-0">
+								<Clock class="w-4 h-4 text-green-600" />
+							</div>
+							<Card.Title class="text-base">Automatisation</Card.Title>
+						</div>
+					</Card.Header>
+					<Card.Content class="space-y-1">
+
+						<!-- Auto schedule -->
+						<div class="flex items-center justify-between px-3 py-3 hover:bg-muted/30 rounded-lg transition-colors">
+							<div>
+								<p class="text-sm font-medium text-foreground">Planning automatique</p>
+								<p class="text-xs text-muted-foreground">Activer/désactiver le système selon un planning</p>
+							</div>
+							<button
+								type="button"
+								onclick={() => (autoScheduleEnabled = !autoScheduleEnabled)}
+								aria-label="Planning automatique"
+								class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus:outline-none {autoScheduleEnabled ? 'bg-primary' : 'bg-input'}"
+								role="switch"
+								aria-checked={autoScheduleEnabled}
+							>
+								<span class="pointer-events-none block h-4 w-4 rounded-full bg-white shadow-lg transition-transform {autoScheduleEnabled ? 'translate-x-4' : 'translate-x-0'}"></span>
+							</button>
+						</div>
+						{#if autoScheduleEnabled}
+							<div class="ml-4 pl-4 border-l-2 border-primary/30 space-y-3 py-2">
+								<div class="space-y-1.5">
+									<Label for="schedule-start">Désactivation automatique à</Label>
+									<Input id="schedule-start" type="time" bind:value={scheduleStartTime} />
+								</div>
+								<div class="space-y-1.5">
+									<Label for="schedule-end">Réactivation automatique à</Label>
+									<Input id="schedule-end" type="time" bind:value={scheduleEndTime} />
+								</div>
+							</div>
+						{/if}
+
+						<!-- Vacation mode -->
+						<div class="flex items-center justify-between px-3 py-3 hover:bg-muted/30 rounded-lg transition-colors">
+							<div>
+								<p class="text-sm font-medium text-foreground">Mode vacances</p>
+								<p class="text-xs text-muted-foreground">Surveillance renforcée pendant votre absence</p>
+							</div>
+							<button
+								type="button"
+								onclick={() => (vacationModeEnabled = !vacationModeEnabled)}
+								aria-label="Mode vacances"
+								class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus:outline-none {vacationModeEnabled ? 'bg-primary' : 'bg-input'}"
+								role="switch"
+								aria-checked={vacationModeEnabled}
+							>
+								<span class="pointer-events-none block h-4 w-4 rounded-full bg-white shadow-lg transition-transform {vacationModeEnabled ? 'translate-x-4' : 'translate-x-0'}"></span>
+							</button>
+						</div>
+						{#if vacationModeEnabled}
+							<div class="ml-4 pl-4 border-l-2 border-primary/30 space-y-3 py-2">
+								<div class="space-y-1.5">
+									<Label for="vacation-start">Date de début</Label>
+									<Input id="vacation-start" type="date" bind:value={vacationStartDate} />
+								</div>
+								<div class="space-y-1.5">
+									<Label for="vacation-end">Date de fin</Label>
+									<Input id="vacation-end" type="date" bind:value={vacationEndDate} />
+								</div>
+							</div>
+						{/if}
+					</Card.Content>
+				</Card.Root>
+
+				<!-- Actions -->
+				<div class="flex flex-col sm:flex-row gap-3 justify-end pb-8">
+					<Button
+						type="button"
+						variant="outline"
+						onclick={() => (showResetModal = true)}
+					>
+						<RotateCcw class="w-4 h-4 mr-1.5" /> Réinitialiser
+					</Button>
+					<Button type="submit">
+						<Check class="w-4 h-4 mr-1.5" /> Enregistrer les paramètres
+					</Button>
 				</div>
 
-				<form on:submit|preventDefault={saveSettings} class="space-y-6">
-					<!-- Notifications & Alertes -->
-					<div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-						<div class="flex items-center gap-3 mb-6">
-							<div class="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
-								<svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-								</svg>
-							</div>
-							<h2 class="text-xl font-semibold text-gray-900">Notifications & Alertes</h2>
-						</div>
-
-						<div class="space-y-5">
-							<!-- Push Notifications -->
-							<div class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
-								<div class="flex-1">
-									<span class="text-sm font-medium text-gray-900">Notifications push</span>
-									<p class="text-xs text-gray-500">Recevoir des notifications sur cet appareil</p>
-								</div>
-								<label class="relative inline-flex items-center cursor-pointer">
-									<input
-										type="checkbox"
-										bind:checked={pushNotifications}
-										class="sr-only peer"
-									/>
-									<div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-500"></div>
-								</label>
-							</div>
-
-							<!-- Email Alerts -->
-							<div class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
-								<div class="flex-1">
-									<span class="text-sm font-medium text-gray-900">Alertes par email</span>
-									<p class="text-xs text-gray-500">Recevoir des alertes importantes par email</p>
-								</div>
-								<label class="relative inline-flex items-center cursor-pointer">
-									<input
-										type="checkbox"
-										bind:checked={emailAlerts}
-										class="sr-only peer"
-									/>
-									<div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-500"></div>
-								</label>
-							</div>
-
-							{#if emailAlerts}
-								<div class="ml-6">
-									<input
-										type="email"
-										bind:value={alertEmail}
-										placeholder="email@exemple.com"
-										class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-gray-900"
-									/>
-								</div>
-							{/if}
-
-							<!-- SMS Alerts -->
-							<div class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
-								<div class="flex-1">
-									<span class="text-sm font-medium text-gray-900">Alertes par SMS</span>
-									<p class="text-xs text-gray-500">Recevoir des alertes critiques par SMS</p>
-								</div>
-								<label class="relative inline-flex items-center cursor-pointer">
-									<input
-										type="checkbox"
-										bind:checked={smsAlerts}
-										class="sr-only peer"
-									/>
-									<div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-500"></div>
-								</label>
-							</div>
-
-							{#if smsAlerts}
-								<div class="ml-6">
-									<input
-										type="tel"
-										bind:value={alertPhone}
-										placeholder="+33 6 12 34 56 78"
-										class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-gray-900"
-									/>
-								</div>
-							{/if}
-
-							<!-- Sound -->
-							<div class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
-								<div class="flex-1">
-									<span class="text-sm font-medium text-gray-900">Sons</span>
-									<p class="text-xs text-gray-500">Jouer un son pour les notifications</p>
-								</div>
-								<label class="relative inline-flex items-center cursor-pointer">
-									<input
-										type="checkbox"
-										bind:checked={soundEnabled}
-										class="sr-only peer"
-									/>
-									<div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-500"></div>
-								</label>
-							</div>
-
-							<!-- Vibration -->
-							<div class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
-								<div class="flex-1">
-									<span class="text-sm font-medium text-gray-900">Vibrations</span>
-									<p class="text-xs text-gray-500">Vibrer pour les notifications</p>
-								</div>
-								<label class="relative inline-flex items-center cursor-pointer">
-									<input
-										type="checkbox"
-										bind:checked={vibrationEnabled}
-										class="sr-only peer"
-									/>
-									<div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-500"></div>
-								</label>
-							</div>
-						</div>
-					</div>
-
-					<!-- Sécurité & Confidentialité -->
-					<div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-						<div class="flex items-center gap-3 mb-6">
-							<div class="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
-								<svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-								</svg>
-							</div>
-							<h2 class="text-xl font-semibold text-gray-900">Sécurité & Confidentialité</h2>
-						</div>
-
-						<div class="space-y-5">
-							<!-- Change Password -->
-							<div class="border border-gray-200 rounded-lg p-4">
-								<h3 class="text-sm font-semibold text-gray-900 mb-4">Changer le mot de passe</h3>
-								<div class="space-y-3">
-									<input
-										type="password"
-										bind:value={currentPassword}
-										placeholder="Mot de passe actuel"
-										class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-gray-900"
-									/>
-									<input
-										type="password"
-										bind:value={newPassword}
-										placeholder="Nouveau mot de passe"
-										class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-gray-900"
-									/>
-									<input
-										type="password"
-										bind:value={confirmPassword}
-										placeholder="Confirmer le nouveau mot de passe"
-										class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-gray-900"
-									/>
-									<button
-										type="button"
-										on:click={changePassword}
-										class="w-full px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors"
-									>
-										Changer le mot de passe
-									</button>
-								</div>
-							</div>
-
-							<!-- PIN Code -->
-							<div>
-								<label for="pin-code" class="block text-sm font-medium text-gray-700 mb-2">
-									Code PIN (4 chiffres)
-								</label>
-								<input
-									type="text"
-									id="pin-code"
-									bind:value={pinCode}
-									maxlength="4"
-									pattern="[0-9]{4}"
-									placeholder="••••"
-									class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-gray-900"
-								/>
-								<p class="text-xs text-gray-500 mt-1">Utilisé pour un accès rapide à l'application</p>
-							</div>
-
-							<!-- Two-Factor Authentication -->
-							<div class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
-								<div class="flex-1">
-									<span class="text-sm font-medium text-gray-900">Authentification à deux facteurs</span>
-									<p class="text-xs text-gray-500">Sécurité renforcée pour votre compte</p>
-								</div>
-								<label class="relative inline-flex items-center cursor-pointer">
-									<input
-										type="checkbox"
-										bind:checked={twoFactorEnabled}
-										class="sr-only peer"
-									/>
-									<div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-500"></div>
-								</label>
-							</div>
-
-							<!-- Connected Devices -->
-							<div class="border border-gray-200 rounded-lg p-4">
-								<h3 class="text-sm font-semibold text-gray-900 mb-4">Appareils connectés</h3>
-								<div class="space-y-3">
-									{#each connectedDevices as device (device.id)}
-										<div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-											<div class="flex-1">
-												<p class="text-sm font-medium text-gray-900">{device.name}</p>
-												<p class="text-xs text-gray-500">
-													Dernière activité: {formatDateTime(device.lastActive)}
-												</p>
-												<p class="text-xs text-gray-500">{device.location}</p>
-											</div>
-											<button
-												type="button"
-												on:click={() => disconnectDevice(device.id)}
-												class="px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-											>
-												Déconnecter
-											</button>
-										</div>
-									{/each}
-								</div>
-							</div>
-						</div>
-					</div>
-
-					<!-- Caméras & Enregistrements -->
-					<div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-						<div class="flex items-center gap-3 mb-6">
-							<div class="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-								<svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-								</svg>
-							</div>
-							<h2 class="text-xl font-semibold text-gray-900">Caméras & Enregistrements</h2>
-						</div>
-
-						<div class="space-y-5">
-							<!-- Video Quality -->
-							<div>
-								<label for="video-quality" class="block text-sm font-medium text-gray-700 mb-2">
-									Qualité vidéo
-								</label>
-								<div class="relative">
-									<select
-										id="video-quality"
-										bind:value={videoQuality}
-										class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-gray-900 appearance-none"
-									>
-										<option value="720p">720p (HD)</option>
-										<option value="1080p">1080p (Full HD)</option>
-										<option value="1440p">1440p (2K)</option>
-										<option value="2160p">2160p (4K)</option>
-									</select>
-									<div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
-										<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-											<path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
-										</svg>
-									</div>
-								</div>
-							</div>
-
-							<!-- Retention Days -->
-							<div>
-								<label for="retention-days" class="block text-sm font-medium text-gray-700 mb-2">
-									Durée de conservation (jours)
-								</label>
-								<input
-									type="number"
-									id="retention-days"
-									bind:value={retentionDays}
-									min="7"
-									max="365"
-									class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-gray-900"
-								/>
-								<p class="text-xs text-gray-500 mt-1">Les enregistrements seront automatiquement supprimés après cette période</p>
-							</div>
-
-							<!-- Storage Type -->
-							<div>
-								<label class="block text-sm font-medium text-gray-700 mb-2">
-									Type de stockage
-								</label>
-								<div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-									<label class="flex items-center p-3 border-2 rounded-lg cursor-pointer transition-all {storageType === 'cloud' ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-gray-300'}">
-										<input
-											type="radio"
-											bind:group={storageType}
-											value="cloud"
-											class="w-5 h-5 text-teal-600"
-										/>
-										<div class="ml-3">
-											<span class="text-sm font-medium text-gray-900">Cloud</span>
-											<p class="text-xs text-gray-500">Stockage en ligne sécurisé</p>
-										</div>
-									</label>
-									<label class="flex items-center p-3 border-2 rounded-lg cursor-pointer transition-all {storageType === 'local' ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-gray-300'}">
-										<input
-											type="radio"
-											bind:group={storageType}
-											value="local"
-											class="w-5 h-5 text-teal-600"
-										/>
-										<div class="ml-3">
-											<span class="text-sm font-medium text-gray-900">Local</span>
-											<p class="text-xs text-gray-500">Sur cet appareil uniquement</p>
-										</div>
-									</label>
-								</div>
-							</div>
-
-							<!-- Night Vision -->
-							<div class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
-								<div class="flex-1">
-									<span class="text-sm font-medium text-gray-900">Vision nocturne</span>
-									<p class="text-xs text-gray-500">Activer automatiquement en basse lumière</p>
-								</div>
-								<label class="relative inline-flex items-center cursor-pointer">
-									<input
-										type="checkbox"
-										bind:checked={nightVisionEnabled}
-										class="sr-only peer"
-									/>
-									<div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-500"></div>
-								</label>
-							</div>
-
-							<!-- Motion Detection Sensitivity -->
-							<div>
-								<label for="motion-sensitivity" class="block text-sm font-medium text-gray-700 mb-2">
-									Sensibilité de détection de mouvement
-								</label>
-								<div class="relative">
-									<select
-										id="motion-sensitivity"
-										bind:value={motionDetectionSensitivity}
-										class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-gray-900 appearance-none"
-									>
-										<option value="low">Faible</option>
-										<option value="medium">Moyenne</option>
-										<option value="high">Élevée</option>
-									</select>
-									<div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
-										<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-											<path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
-										</svg>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-
-					<!-- Profil -->
-					<div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-						<div class="flex items-center gap-3 mb-6">
-							<div class="w-10 h-10 rounded-lg bg-teal-100 flex items-center justify-center">
-								<svg class="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-								</svg>
-							</div>
-							<h2 class="text-xl font-semibold text-gray-900">Profil</h2>
-						</div>
-
-						<div class="space-y-5">
-							<!-- Profile Picture -->
-							<div>
-								<label class="block text-sm font-medium text-gray-700 mb-2">
-									Photo de profil
-								</label>
-								<div class="flex items-center gap-4">
-									{#if profilePicPreview}
-										<img src={profilePicPreview} alt="Profile preview" class="w-20 h-20 rounded-full object-cover border-2 border-gray-200" />
-									{:else}
-										<div class="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center">
-											<svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-											</svg>
-										</div>
-									{/if}
-									<label class="cursor-pointer px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors">
-										<span>Choisir une photo</span>
-										<input
-											type="file"
-											accept="image/*"
-											on:change={handleProfilePicChange}
-											class="hidden"
-										/>
-									</label>
-								</div>
-							</div>
-
-							<!-- Name -->
-							<div>
-								<label for="user-name" class="block text-sm font-medium text-gray-700 mb-2">
-									Nom
-								</label>
-								<input
-									type="text"
-									id="user-name"
-									bind:value={userName}
-									placeholder="Votre nom"
-									class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-gray-900"
-								/>
-							</div>
-
-							<!-- Email -->
-							<div>
-								<label for="user-email" class="block text-sm font-medium text-gray-700 mb-2">
-									Email
-								</label>
-								<input
-									type="email"
-									id="user-email"
-									bind:value={userEmail}
-									placeholder="exemple@mail.com"
-									class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-gray-900"
-								/>
-							</div>
-
-							<!-- Phone -->
-							<div>
-								<label for="user-phone" class="block text-sm font-medium text-gray-700 mb-2">
-									Numéro de téléphone
-								</label>
-								<input
-									type="tel"
-									id="user-phone"
-									bind:value={userPhone}
-									placeholder="+33 6 12 34 56 78"
-									class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-gray-900"
-								/>
-							</div>
-						</div>
-					</div>
-
-					<!-- Interphone -->
-					<div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-						<div class="flex items-center gap-3 mb-6">
-							<div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-								<svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-								</svg>
-							</div>
-							<h2 class="text-xl font-semibold text-gray-900">Interphone</h2>
-						</div>
-
-						<div class="space-y-5">
-							<!-- Custom Message -->
-							<div>
-								<label for="custom-message" class="block text-sm font-medium text-gray-700 mb-2">
-									Message personnalisé
-								</label>
-								<textarea
-									id="custom-message"
-									bind:value={customMessage}
-									rows="4"
-									placeholder="Votre message personnalisé..."
-									class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-gray-900 resize-none"
-								></textarea>
-								<p class="text-xs text-gray-500 mt-1">Ce message sera affiché sur l'interphone quand quelqu'un sonne</p>
-							</div>
-
-							<!-- Volume -->
-							<div>
-								<label for="intercom-volume" class="block text-sm font-medium text-gray-700 mb-2">
-									Volume de l'interphone: {intercomVolume}%
-								</label>
-								<input
-									type="range"
-									id="intercom-volume"
-									bind:value={intercomVolume}
-									min="0"
-									max="100"
-									step="5"
-									class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-teal-600"
-								/>
-							</div>
-						</div>
-					</div>
-
-					<!-- Apparence -->
-					<div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-						<div class="flex items-center gap-3 mb-6">
-							<div class="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
-								<svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-								</svg>
-							</div>
-							<h2 class="text-xl font-semibold text-gray-900">Apparence</h2>
-						</div>
-
-						<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-							<!-- Theme -->
-							<div>
-								<label for="theme-select" class="block text-sm font-medium text-gray-700 mb-2">
-									Thème
-								</label>
-								<div class="relative">
-									<select
-										id="theme-select"
-										bind:value={selectedTheme}
-										class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-gray-900 appearance-none"
-									>
-										<option value="light">Clair</option>
-										<option value="dark">Sombre</option>
-										<option value="auto">Automatique</option>
-									</select>
-									<div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
-										<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-											<path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
-										</svg>
-									</div>
-								</div>
-							</div>
-
-							<!-- Language -->
-							<div>
-								<label for="language-select" class="block text-sm font-medium text-gray-700 mb-2">
-									Langue
-								</label>
-								<div class="relative">
-									<select
-										id="language-select"
-										bind:value={selectedLanguage}
-										class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-gray-900 appearance-none"
-									>
-										<option value="fr">Français</option>
-										<option value="en">English</option>
-										<option value="es">Español</option>
-										<option value="de">Deutsch</option>
-									</select>
-									<div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
-										<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-											<path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
-										</svg>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-
-					<!-- Automatisation -->
-					<div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-						<div class="flex items-center gap-3 mb-6">
-							<div class="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
-								<svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-								</svg>
-							</div>
-							<h2 class="text-xl font-semibold text-gray-900">Automatisation</h2>
-						</div>
-
-						<div class="space-y-5">
-							<!-- Auto Schedule -->
-							<div class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
-								<div class="flex-1">
-									<span class="text-sm font-medium text-gray-900">Planning automatique</span>
-									<p class="text-xs text-gray-500">Activer/désactiver le système selon un planning</p>
-								</div>
-								<label class="relative inline-flex items-center cursor-pointer">
-									<input
-										type="checkbox"
-										bind:checked={autoScheduleEnabled}
-										class="sr-only peer"
-									/>
-									<div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-500"></div>
-								</label>
-							</div>
-
-							{#if autoScheduleEnabled}
-								<div class="ml-6 space-y-3 border-l-2 border-teal-200 pl-4">
-									<div>
-										<label for="schedule-start" class="block text-sm font-medium text-gray-700 mb-2">
-											Désactivation automatique à
-										</label>
-										<input
-											type="time"
-											id="schedule-start"
-											bind:value={scheduleStartTime}
-											class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-gray-900"
-										/>
-									</div>
-									<div>
-										<label for="schedule-end" class="block text-sm font-medium text-gray-700 mb-2">
-											Réactivation automatique à
-										</label>
-										<input
-											type="time"
-											id="schedule-end"
-											bind:value={scheduleEndTime}
-											class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-gray-900"
-										/>
-									</div>
-								</div>
-							{/if}
-
-							<!-- Vacation Mode -->
-							<div class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
-								<div class="flex-1">
-									<span class="text-sm font-medium text-gray-900">Mode vacances</span>
-									<p class="text-xs text-gray-500">Surveillance renforcée pendant votre absence</p>
-								</div>
-								<label class="relative inline-flex items-center cursor-pointer">
-									<input
-										type="checkbox"
-										bind:checked={vacationModeEnabled}
-										class="sr-only peer"
-									/>
-									<div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-500"></div>
-								</label>
-							</div>
-
-							{#if vacationModeEnabled}
-								<div class="ml-6 space-y-3 border-l-2 border-teal-200 pl-4">
-									<div>
-										<label for="vacation-start" class="block text-sm font-medium text-gray-700 mb-2">
-											Date de début
-										</label>
-										<input
-											type="date"
-											id="vacation-start"
-											bind:value={vacationStartDate}
-											class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-gray-900"
-										/>
-									</div>
-									<div>
-										<label for="vacation-end" class="block text-sm font-medium text-gray-700 mb-2">
-											Date de fin
-										</label>
-										<input
-											type="date"
-											id="vacation-end"
-											bind:value={vacationEndDate}
-											class="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-gray-900"
-										/>
-									</div>
-								</div>
-							{/if}
-						</div>
-					</div>
-
-					<!-- Action Buttons -->
-					<div class="flex flex-col sm:flex-row gap-4 justify-center">
-						<button
-							type="button"
-							on:click={resetSettings}
-							class="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-lg transition-colors inline-flex items-center justify-center gap-2"
-						>
-							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-							</svg>
-							Réinitialiser
-						</button>
-
-						<button
-							type="submit"
-							class="px-8 py-3 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all inline-flex items-center justify-center gap-2"
-						>
-							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-							</svg>
-							Enregistrer les paramètres
-						</button>
-					</div>
-				</form>
-			</div>
+			</form>
 		</div>
 	</main>
 </div>
+
+<!-- Disconnect modal -->
+<DeleteModal
+	bind:open={showDisconnectModal}
+	title="Déconnecter l'appareil"
+	message={deviceToDisconnect ? `Êtes-vous sûr de vouloir déconnecter ${deviceToDisconnect.name} ?` : ''}
+	confirmText="Déconnecter"
+	onConfirm={confirmDisconnect}
+/>
+
+<!-- Reset modal -->
+<DeleteModal
+	bind:open={showResetModal}
+	title="Réinitialiser les paramètres"
+	message="Êtes-vous sûr de vouloir réinitialiser tous les paramètres ? Cette action est irréversible."
+	confirmText="Réinitialiser"
+	onConfirm={confirmReset}
+/>

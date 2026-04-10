@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { Separator } from '$lib/components/ui/separator';
 	import { Avatar, AvatarFallback } from '$lib/components/ui/avatar';
 	import {
@@ -7,18 +7,36 @@
 		CalendarDays, Phone, Settings, CircleHelp, LogOut,
 		ChevronDown, ChevronRight, Video
 	} from '@lucide/svelte';
+	import { authStore, authToken } from '$lib/stores/auth.svelte';
 
 	let isCameraOpen = $state(false);
 	let isEventOpen = $state(false);
 
 	function isActive(path: string): boolean {
-		return $page.url.pathname === path || $page.url.pathname.startsWith(path + '/');
+		return page.url.pathname === path || page.url.pathname.startsWith(path + '/');
 	}
 
 	$effect(() => {
-		if ($page.url.pathname.startsWith('/recordings')) isCameraOpen = true;
-		if ($page.url.pathname.startsWith('/events')) isEventOpen = true;
+		if (page.url.pathname.startsWith('/recordings')) isCameraOpen = true;
+		if (page.url.pathname.startsWith('/events')) isEventOpen = true;
 	});
+
+	/** Extrait l'email depuis le payload JWT (sans vérification de signature) */
+	function getUserEmail(token: string | null): string {
+		if (!token) return '';
+		try {
+			const payload = JSON.parse(atob(token.split('.')[1]));
+			return payload.sub ?? '';
+		} catch {
+			return '';
+		}
+	}
+
+	/** Initiales pour l'avatar (ex: "ab@x.com" → "AB") */
+	function getInitials(email: string): string {
+		if (!email) return '?';
+		return email.slice(0, 2).toUpperCase();
+	}
 
 	const navItemClass = (active: boolean) =>
 		`w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors ${
@@ -161,17 +179,27 @@
 	<!-- User footer -->
 	<div class="border-t border-sidebar-border p-3 shrink-0">
 		<Separator class="mb-3" />
-		<div class="flex items-center gap-3 px-1">
-			<Avatar class="h-8 w-8 shrink-0">
-				<AvatarFallback class="bg-primary/10 text-primary text-xs font-semibold">JD</AvatarFallback>
-			</Avatar>
-			<div class="flex-1 min-w-0">
-				<p class="text-sm font-medium text-foreground truncate">John Doe</p>
-				<p class="text-xs text-muted-foreground truncate">Web Developer</p>
+		{#snippet userFooter()}
+			{@const email = getUserEmail($authToken)}
+			<div class="flex items-center gap-3 px-1">
+				<Avatar class="h-8 w-8 shrink-0">
+					<AvatarFallback class="bg-primary/10 text-primary text-xs font-semibold">
+						{getInitials(email)}
+					</AvatarFallback>
+				</Avatar>
+				<div class="flex-1 min-w-0">
+					<p class="text-sm font-medium text-foreground truncate">{email || 'Utilisateur'}</p>
+					<p class="text-xs text-muted-foreground truncate">Guard AI</p>
+				</div>
+				<button
+					onclick={() => authStore.logout()}
+					title="Se déconnecter"
+					class="text-muted-foreground hover:text-destructive transition-colors"
+				>
+					<LogOut class="w-4 h-4" />
+				</button>
 			</div>
-			<a href="/login" class="text-muted-foreground hover:text-foreground transition-colors">
-				<LogOut class="w-4 h-4" />
-			</a>
-		</div>
+		{/snippet}
+		{@render userFooter()}
 	</div>
 </aside>
