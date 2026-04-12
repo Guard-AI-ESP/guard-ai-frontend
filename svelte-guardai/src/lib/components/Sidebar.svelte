@@ -5,7 +5,7 @@
 	import {
 		LayoutDashboard, ShieldCheck, Camera, MessageSquare, Zap,
 		CalendarDays, Phone, Settings, CircleHelp, LogOut,
-		ChevronDown, ChevronRight, Video
+		ChevronDown, ChevronRight, Video, Users
 	} from '@lucide/svelte';
 	import { authStore, authToken } from '$lib/stores/auth.svelte';
 
@@ -146,6 +146,12 @@
 							</li>
 						</ul>
 					{/if}
+				</li>
+				<li>
+					<a href="/persons" class={navItemClass(isActive('/persons'))}>
+						<Users class="w-4 h-4 shrink-0" />
+						Personnes
+					</a>
 				</li>
 				<li>
 					<a href="/journal-appels" class={navItemClass(isActive('/journal-appels'))}>
