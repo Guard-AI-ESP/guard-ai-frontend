@@ -70,6 +70,16 @@
 		return severity === 'critical' ? 'text-red-600' : severity === 'warning' ? 'text-yellow-600' : 'text-blue-600';
 	}
 
+	function formatTime(timestamp: string): string {
+		return new Date(timestamp).toLocaleTimeString('fr-FR', {
+			hour: '2-digit', minute: '2-digit', second: '2-digit'
+		});
+	}
+
+	function formatConfidence(confidence: number): string {
+		return `${Math.round(confidence * 100)}%`;
+	}
+
 	onMount(async () => {
 		const healthy = await connectionStore.checkApiHealth();
 		if (healthy) {
@@ -297,6 +307,7 @@
 										{:else}
 											{#each $recentEvents as event (event.event_id)}
 												{@const style = getEventStyle(event)}
+												{@const isFaceEvent = event.source === 'camera' && (event.type === 'face_recognized' || event.type === 'face_unknown')}
 												<div class="flex gap-3">
 													<div class="w-9 h-9 rounded-full {style.bg} flex items-center justify-center shrink-0">
 														<svg class="w-4 h-4 {style.iconColor}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -304,10 +315,46 @@
 														</svg>
 													</div>
 													<div class="flex-1 min-w-0">
-														<p class="text-sm font-medium text-foreground truncate">{event.type}</p>
-														<p class="text-xs text-muted-foreground">{formatDate(event.timestamp)}</p>
-														<p class="text-xs text-muted-foreground">
-															{event.source} · <span class="{severityColor(event.severity)} font-medium">{event.severity}</span>
+														<!-- Ligne titre : nom ou type d'event -->
+														<div class="flex items-center gap-1.5 flex-wrap">
+															<p class="text-sm font-medium text-foreground truncate">
+																{#if isFaceEvent && event.person_name}
+																	{event.person_name}
+																{:else if isFaceEvent}
+																	Inconnu
+																{:else}
+																	{event.type}
+																{/if}
+															</p>
+															{#if isFaceEvent}
+																{#if event.is_known}
+																	<span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">
+																		Connu
+																	</span>
+																{:else}
+																	<span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700">
+																		Intrus
+																	</span>
+																{/if}
+															{:else}
+																<span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium
+																	{event.severity === 'critical' ? 'bg-red-100 text-red-700' : event.severity === 'warning' ? 'bg-yellow-100 text-yellow-700' : 'bg-blue-100 text-blue-700'}">
+																	{event.severity}
+																</span>
+															{/if}
+														</div>
+
+														<!-- Ligne détails -->
+														<p class="text-xs text-muted-foreground mt-0.5">
+															{formatTime(event.timestamp)}
+															{#if event.camera_id}
+																· {event.camera_id}
+															{/if}
+															{#if event.confidence !== undefined}
+																· <span class="font-medium {event.is_known ? 'text-green-600' : 'text-red-600'}">
+																	{formatConfidence(event.confidence)}
+																</span>
+															{/if}
 														</p>
 													</div>
 												</div>
@@ -318,11 +365,22 @@
 
 								<Tabs.Content value="logs" class="p-4">
 									<div class="space-y-1.5 font-mono text-xs">
-										{#each $recentEvents.slice(0, 5) as event (event.event_id)}
+										{#each $recentEvents.slice(0, 8) as event (event.event_id)}
 											<div class="p-2 bg-muted/50 rounded">
-												<span class="text-muted-foreground">{new Date(event.timestamp).toLocaleTimeString()}</span>
+												<span class="text-muted-foreground">{formatTime(event.timestamp)}</span>
 												<span class="ml-1 {severityColor(event.severity)} font-medium">[{event.severity.toUpperCase()}]</span>
 												<span class="ml-1 text-foreground">{event.type}</span>
+												{#if event.person_name}
+													<span class="ml-1 text-primary font-medium">→ {event.person_name}</span>
+												{/if}
+												{#if event.camera_id}
+													<span class="ml-1 text-muted-foreground">({event.camera_id})</span>
+												{/if}
+												{#if event.confidence !== undefined}
+													<span class="ml-1 {event.is_known ? 'text-green-600' : 'text-red-600'}">
+														{formatConfidence(event.confidence)}
+													</span>
+												{/if}
 											</div>
 										{/each}
 										{#if $isEmpty}
