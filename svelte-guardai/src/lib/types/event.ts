@@ -6,6 +6,13 @@
 export type EventSource = 'camera' | 'network' | 'sensor' | 'system';
 export type Severity = 'info' | 'warning' | 'critical';
 
+export interface BoundingBox {
+	x: number;
+	y: number;
+	w: number;
+	h: number;
+}
+
 export interface EventV1 {
 	event_id: string;
 	site_id: string;
@@ -18,6 +25,14 @@ export interface EventV1 {
 	media_ref: string | null;
 	tags: string[];
 	schema_version: 'v1';
+
+	// Champs de détection faciale (présents uniquement pour source=camera)
+	camera_id?: string;
+	face_id?: string;
+	person_name?: string;
+	confidence?: number;
+	is_known?: boolean;
+	bounding_box?: BoundingBox;
 }
 
 export interface EventQueryParams {
