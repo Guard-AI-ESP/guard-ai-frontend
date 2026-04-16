@@ -5,7 +5,7 @@
 	import {
 		LayoutDashboard, ShieldCheck, Camera, MessageSquare, Zap,
 		CalendarDays, Phone, Settings, CircleHelp, LogOut,
-		ChevronDown, ChevronRight, Video
+		ChevronDown, ChevronRight, Video, Cpu
 	} from '@lucide/svelte';
 	import { authStore, authToken } from '$lib/stores/auth.svelte';
 
@@ -126,6 +126,12 @@
 					<a href="/detectors" class={navItemClass(isActive('/detectors'))}>
 						<Zap class="w-4 h-4 shrink-0" />
 						Détecteurs
+					</a>
+				</li>
+				<li>
+					<a href="/sensors" class={navItemClass(isActive('/sensors'))}>
+						<Cpu class="w-4 h-4 shrink-0" />
+						Capteurs IoT
 					</a>
 				</li>
 				<li>
