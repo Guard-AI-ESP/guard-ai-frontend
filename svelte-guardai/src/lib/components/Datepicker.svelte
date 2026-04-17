@@ -9,37 +9,39 @@
 
 	let { value = $bindable(''), placeholder = 'Sélectionner une date', id }: Props = $props();
 
-	async function pikaday(node: HTMLInputElement) {
+	function pikaday(node: HTMLInputElement) {
 		if (!browser) return;
-		const { default: Pikaday } = await import('pikaday');
-		const picker = new Pikaday({
-			field: node,
-			format: 'YYYY-MM-DD',
-			i18n: {
-				previousMonth: 'Mois précédent',
-				nextMonth: 'Mois suivant',
-				months: ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'],
-				weekdays: ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'],
-				weekdaysShort: ['Di','Lu','Ma','Me','Je','Ve','Sa'],
-			},
-			firstDay: 1,
-			toString(date) {
-				const y = date.getFullYear();
-				const m = String(date.getMonth() + 1).padStart(2, '0');
-				const d = String(date.getDate()).padStart(2, '0');
-				return `${y}-${m}-${d}`;
-			},
-			onSelect(date) {
-				const y = date.getFullYear();
-				const m = String(date.getMonth() + 1).padStart(2, '0');
-				const d = String(date.getDate()).padStart(2, '0');
-				value = `${y}-${m}-${d}`;
-			},
+		let picker: any;
+		import('pikaday').then(({ default: Pikaday }) => {
+			picker = new Pikaday({
+				field: node,
+				format: 'YYYY-MM-DD',
+				i18n: {
+					previousMonth: 'Mois précédent',
+					nextMonth: 'Mois suivant',
+					months: ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'],
+					weekdays: ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'],
+					weekdaysShort: ['Di','Lu','Ma','Me','Je','Ve','Sa'],
+				},
+				firstDay: 1,
+				toString(date: Date) {
+					const y = date.getFullYear();
+					const m = String(date.getMonth() + 1).padStart(2, '0');
+					const d = String(date.getDate()).padStart(2, '0');
+					return `${y}-${m}-${d}`;
+				},
+				onSelect(date: Date) {
+					const y = date.getFullYear();
+					const m = String(date.getMonth() + 1).padStart(2, '0');
+					const d = String(date.getDate()).padStart(2, '0');
+					value = `${y}-${m}-${d}`;
+				},
+			});
 		});
 
 		return {
 			destroy() {
-				picker.destroy();
+				picker?.destroy();
 			}
 		};
 	}

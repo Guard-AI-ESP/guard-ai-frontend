@@ -145,7 +145,7 @@
 				{ value: 'missed', label: 'Manqu\u00e9s' },
 			]}
 			active={activeFilter}
-			onchange={(v) => activeFilter = v}
+			onchange={(v) => activeFilter = v as typeof activeFilter}
 		/>
 
 		<!-- Date filter -->

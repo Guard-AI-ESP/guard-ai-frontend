@@ -119,7 +119,7 @@
 			{ value: 'Porte arrière', label: 'Porte arrière' },
 		]}
 		active={activeCamera}
-		onchange={(v) => activeCamera = v}
+		onchange={(v) => activeCamera = v as typeof activeCamera}
 	/>
 
 	<div class="flex items-center gap-2 flex-wrap">

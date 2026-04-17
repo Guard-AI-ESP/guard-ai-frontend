@@ -216,7 +216,7 @@
 				{ value: 'past', label: 'Termin\u00e9s' },
 			]}
 			active={filterStatus}
-			onchange={(v) => filterStatus = v}
+			onchange={(v) => filterStatus = v as typeof filterStatus}
 		/>
 	</div>
 
