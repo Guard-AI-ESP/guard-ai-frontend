@@ -18,6 +18,7 @@
 		{ label: 'Événements',             icon: 'notifications', href: '/events',     sub: true },
 		{ label: 'Appels',                 icon: 'call',          href: '/calls',      sub: true },
 		{ label: 'Personnes',              icon: 'people',        href: '/persons',    sub: true },
+		{ label: 'Capteurs IoT',           icon: 'memory',        href: '/sensors',    sub: true },
 	];
 
 	const cyberItems: NavItem[] = [
