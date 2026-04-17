@@ -1,69 +1,90 @@
 <script lang="ts">
-	import Datepicker from './Datepicker.svelte';
-	import { Clock } from '@lucide/svelte';
+	import { browser } from '$app/environment';
+	import Timepicker from '$lib/components/Timepicker.svelte';
 
-	let {
-		value = $bindable(''),
-		label = '',
-		id = `datetime-${Math.random().toString(36).substring(2, 9)}`,
-		required = false
-	}: {
+	type Props = {
 		value?: string;
 		label?: string;
 		id?: string;
-		required?: boolean;
-	} = $props();
+	};
 
-	let dateValue = $state('');
-	let timeValue = $state('12:00');
+	let { value = $bindable(''), label, id }: Props = $props();
 
-	// Parse initial value
-	if (value) {
-		const [date, time] = value.split('T');
-		if (date) dateValue = date;
-		if (time) timeValue = time.substring(0, 5);
-	}
+	let datePart = $state(value ? value.split('T')[0] : '');
+	let timePart = $state(value ? value.split('T')[1]?.slice(0, 5) : '');
 
 	$effect(() => {
-		if (dateValue && timeValue) {
-			value = `${dateValue}T${timeValue}`;
-		} else if (dateValue) {
-			value = `${dateValue}T12:00`;
+		if (datePart && timePart) {
+			value = `${datePart}T${timePart}`;
+		} else if (datePart) {
+			value = `${datePart}T00:00`;
 		} else {
 			value = '';
 		}
 	});
+
+	async function pikaday(node: HTMLInputElement) {
+		if (!browser) return;
+		const { default: Pikaday } = await import('pikaday');
+		const picker = new Pikaday({
+			field: node,
+			format: 'YYYY-MM-DD',
+			i18n: {
+				previousMonth: 'Mois précédent',
+				nextMonth: 'Mois suivant',
+				months: ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'],
+				weekdays: ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'],
+				weekdaysShort: ['Di','Lu','Ma','Me','Je','Ve','Sa'],
+			},
+			firstDay: 1,
+			toString(date) {
+				const y = date.getFullYear();
+				const m = String(date.getMonth() + 1).padStart(2, '0');
+				const d = String(date.getDate()).padStart(2, '0');
+				return `${y}-${m}-${d}`;
+			},
+			onSelect(date) {
+				const y = date.getFullYear();
+				const m = String(date.getMonth() + 1).padStart(2, '0');
+				const d = String(date.getDate()).padStart(2, '0');
+				datePart = `${y}-${m}-${d}`;
+			},
+		});
+
+		if (datePart) {
+			picker.setDate(new Date(datePart), true);
+		}
+
+		return {
+			destroy() { picker.destroy(); }
+		};
+	}
 </script>
 
-<div class="w-full">
+<div class="flex flex-col gap-1.5">
 	{#if label}
-		<label class="block text-sm font-medium text-foreground mb-1.5">
-			{label}
-			{#if required}<span class="text-destructive">*</span>{/if}
-		</label>
+		<label for={id} class="text-sm font-medium text-slate-700">{label}</label>
 	{/if}
-
-	<div class="grid grid-cols-2 gap-3">
-		<Datepicker
-			bind:value={dateValue}
-			placeholder="Sélectionner une date"
-			id="{id}-date"
-			{required}
-		/>
-
-		<div class="relative">
-			<div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-				<Clock class="w-4 h-4 text-muted-foreground" />
+	<div class="flex gap-2">
+		<div class="relative flex-1">
+			<div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none text-slate-400">
+				<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" viewBox="0 0 24 24">
+					<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 10h16m-8-3V4M7 7V4m10 3V4M5 20h14a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1Zm3-7h.01v.01H8V13Zm4 0h.01v.01H12V13Zm4 0h.01v.01H16V13Zm-8 4h.01v.01H8V17Zm4 0h.01v.01H12V17Zm4 0h.01v.01H16V17Z"/>
+				</svg>
 			</div>
 			<input
-				type="time"
-				id="{id}-time"
-				bind:value={timeValue}
-				{required}
-				class="w-full pl-10 pr-4 py-2 border border-input bg-background text-foreground text-sm rounded-md
-				       focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 transition-colors
-				       [color-scheme:light]"
+				use:pikaday
+				type="text"
+				bind:value={datePart}
+				placeholder="Date"
+				autocomplete="off"
+				readonly
+				class="block w-full ps-9 pe-3 py-2.5 bg-white border border-slate-200 text-slate-700 text-sm rounded-xl shadow-soft focus:ring-1 focus:ring-primary focus:border-primary outline-none placeholder:text-slate-400 transition-colors cursor-pointer"
 			/>
+		</div>
+
+		<div class="w-28">
+			<Timepicker bind:value={timePart} placeholder="Heure" />
 		</div>
 	</div>
 </div>
