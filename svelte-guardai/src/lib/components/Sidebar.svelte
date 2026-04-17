@@ -17,6 +17,7 @@
 		{ label: 'Détecteurs de présence', icon: 'sensors',       href: '/detectors',  sub: true },
 		{ label: 'Événements',             icon: 'notifications', href: '/events',     sub: true },
 		{ label: 'Appels',                 icon: 'call',          href: '/calls',      sub: true },
+		{ label: 'Personnes',              icon: 'people',        href: '/persons',    sub: true },
 	];
 
 	const cyberItems: NavItem[] = [
@@ -31,7 +32,7 @@
 
 	function isActive(href: string): boolean {
 		const path = $page.url.pathname;
-		if (href === '/dashboard') return path === '/dashboard' || path.startsWith('/camera') || path.startsWith('/messages') || path.startsWith('/detectors') || path.startsWith('/events') || path.startsWith('/calls');
+		if (href === '/dashboard') return path === '/dashboard' || path.startsWith('/camera') || path.startsWith('/messages') || path.startsWith('/detectors') || path.startsWith('/events') || path.startsWith('/calls') || path.startsWith('/persons');
 		if (href === '/cyber') return path.startsWith('/cyber');
 		return path === href;
 	}
