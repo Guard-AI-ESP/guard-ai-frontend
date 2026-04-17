@@ -1,5 +1,4 @@
 <script lang="ts">
-	import favicon from '$lib/assets/favicon.svg';
 	import '../app.css';
 	import { onMount } from 'svelte';
 	import { goto, beforeNavigate } from '$app/navigation';
@@ -31,7 +30,8 @@
 </script>
 
 <svelte:head>
-	<link rel="icon" href={favicon} />
+	<link rel="icon" type="image/png" href="/favicon.png" />
+	<title>Guard'AI</title>
 </svelte:head>
 
 {@render children()}

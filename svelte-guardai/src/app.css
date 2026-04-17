@@ -34,38 +34,84 @@
 	--radius-md: calc(var(--radius) - 2px);
 	--radius-lg: var(--radius);
 	--radius-xl: calc(var(--radius) + 4px);
-	--font-sans: var(--font-geist-sans);
+	--font-sans: var(--font-lato);
+	--font-lato: 'Lato', sans-serif;
+	--font-roboto: 'Roboto', sans-serif;
 }
 
+/*
+  Palette Guard'AI — 10 nuances teal (#E7F4F4 → #063233)
+  Règle d'accessibilité : 2 couleurs adjacentes = 3 nuances d'écart minimum
+
+  Pos 1  #E7F4F4  oklch(0.955 0.015 196)  — très clair  (secondary, sidebar bg)
+  Pos 2  #DBEEEF  oklch(0.937 0.022 195)  — clair       (muted bg, input bg)
+  Pos 3  #B6DCDD  oklch(0.876 0.040 194)  — clair-moyen (border, hover on white)
+  Pos 4  #46A2A5  oklch(0.650 0.085 192)  — moyen       (muted text, sidebar hover)
+  Pos 5  #108083  oklch(0.510 0.100 193)  — primaire    (brand color)
+  Pos 6  #0E7274  oklch(0.464 0.090 193)
+  Pos 7  #0E6B6D  oklch(0.440 0.085 193)
+  Pos 8  #0B5557  oklch(0.360 0.070 193)
+  Pos 9  #084041  oklch(0.275 0.055 193)  — foncé
+  Pos 10 #063233  oklch(0.220 0.045 193)  — très foncé  (foreground)
+
+  Vérification des paires adjacentes dans l'UI :
+  - bg white    + border  #B6DCDD (p3)  : white hors palette ✅
+  - bg white    + primary #108083 (p5)  : white hors palette ✅
+  - secondary   #E7F4F4(p1) + sec-fg  #084041(p9) : Δ=8 ✅
+  - muted       #DBEEEF(p2) + mut-fg  #0B5557(p8) : Δ=6 ✅
+  - accent      #B6DCDD(p3) + acc-fg  #084041(p9) : Δ=6 ✅
+  - sidebar     #E7F4F4(p1) + sid-brd #46A2A5(p4) : Δ=3 ✅
+  - sidebar     #E7F4F4(p1) + sid-hov #46A2A5(p4) : Δ=3 ✅
+  - sidebar     #E7F4F4(p1) + sid-fg  #063233(p10): Δ=9 ✅
+  - primary     #108083(p5) + prim-fg white        : white hors palette ✅
+*/
+
 :root {
-	--background: oklch(1 0 0);
-	--foreground: oklch(0.141 0.005 285.823);
-	--card: oklch(1 0 0);
-	--card-foreground: oklch(0.141 0.005 285.823);
-	--popover: oklch(1 0 0);
-	--popover-foreground: oklch(0.141 0.005 285.823);
-	/* Indigo primary */
-	--primary: oklch(0.585 0.233 277.117);
-	--primary-foreground: oklch(1 0 0);
-	--secondary: oklch(0.967 0.001 286.375);
-	--secondary-foreground: oklch(0.21 0.006 285.885);
-	--muted: oklch(0.967 0.001 286.375);
-	--muted-foreground: oklch(0.552 0.016 285.938);
-	--accent: oklch(0.967 0.001 286.375);
-	--accent-foreground: oklch(0.21 0.006 285.885);
-	--destructive: oklch(0.577 0.245 27.325);
-	--border: oklch(0.92 0.004 286.32);
-	--input: oklch(0.92 0.004 286.32);
-	--ring: oklch(0.585 0.233 277.117);
+	/* — Surfaces — */
+	--background:            oklch(1 0 0);
+	--foreground:            oklch(0.220 0.045 193);   /* #063233 — p10 */
+
+	--card:                  oklch(1 0 0);
+	--card-foreground:       oklch(0.220 0.045 193);   /* #063233 — p10 */
+
+	--popover:               oklch(1 0 0);
+	--popover-foreground:    oklch(0.220 0.045 193);   /* #063233 — p10 */
+
+	/* — Brand primary (#108083 — p5) — */
+	--primary:               oklch(0.510 0.100 193);
+	--primary-foreground:    oklch(1 0 0);
+
+	/* — Secondary : #E7F4F4 (p1) — texte #084041 (p9), Δ=8 — */
+	--secondary:             oklch(0.955 0.015 196);
+	--secondary-foreground:  oklch(0.275 0.055 193);
+
+	/* — Muted : #DBEEEF (p2) — texte #0B5557 (p8), Δ=6 — */
+	--muted:                 oklch(0.937 0.022 195);
+	--muted-foreground:      oklch(0.360 0.070 193);
+
+	/* — Accent hover : #B6DCDD (p3) — texte #084041 (p9), Δ=6 — */
+	--accent:                oklch(0.876 0.040 194);
+	--accent-foreground:     oklch(0.275 0.055 193);
+
+	/* — Destructive (erreurs/alertes) — conservé rouge pour sémantique — */
+	--destructive:           oklch(0.577 0.245 27.325);
+
+	/* — Bordures & inputs : #B6DCDD (p3) sur fond blanc — */
+	--border:                oklch(0.876 0.040 194);
+	--input:                 oklch(0.876 0.040 194);
+	--ring:                  oklch(0.510 0.100 193);   /* #108083 — p5 */
+
 	--radius: 0.5rem;
-	--sidebar: oklch(0.985 0 0);
-	--sidebar-foreground: oklch(0.141 0.005 285.823);
-	--sidebar-primary: oklch(0.585 0.233 277.117);
-	--sidebar-primary-foreground: oklch(1 0 0);
-	--sidebar-accent: oklch(0.967 0.001 286.375);
-	--sidebar-accent-foreground: oklch(0.21 0.006 285.885);
-	--sidebar-border: oklch(0.92 0.004 286.32);
-	--sidebar-ring: oklch(0.585 0.233 277.117);
+
+	/* — Sidebar : fond #E7F4F4 (p1) — */
+	--sidebar:                       oklch(0.955 0.015 196);
+	--sidebar-foreground:            oklch(0.220 0.045 193);   /* p10, Δ=9 ✅ */
+	--sidebar-primary:               oklch(0.510 0.100 193);   /* p5,  Δ=4 ✅ */
+	--sidebar-primary-foreground:    oklch(1 0 0);
+	--sidebar-accent:                oklch(0.650 0.085 192);   /* #46A2A5 p4, Δ=3 ✅ */
+	--sidebar-accent-foreground:     oklch(0.220 0.045 193);   /* p10, Δ=6 ✅ */
+	--sidebar-border:                oklch(0.650 0.085 192);   /* #46A2A5 p4, Δ=3 ✅ */
+	--sidebar-ring:                  oklch(0.510 0.100 193);
 }
 
 @layer base {

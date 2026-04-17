@@ -56,21 +56,8 @@
 <aside class="w-64 h-screen bg-sidebar border-r border-sidebar-border flex flex-col overflow-y-auto">
 
 	<!-- Logo -->
-	<div class="h-14 flex items-center px-4 border-b border-sidebar-border shrink-0">
-		<div class="flex items-center gap-2.5">
-			<div class="relative w-8 h-8 shrink-0">
-				<svg class="w-8 h-8 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-					<path d="M12 2L4 6v5c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V6l-8-4z" stroke-linejoin="round"/>
-				</svg>
-				<div class="absolute inset-0 flex items-center justify-center">
-					<svg class="w-3.5 h-3.5 text-primary" viewBox="0 0 24 24" fill="currentColor">
-						<rect x="8" y="11" width="8" height="9" rx="1.5" />
-						<path d="M10 11V8a2 2 0 0 1 4 0v3" fill="none" stroke="white" stroke-width="1.5"/>
-					</svg>
-				</div>
-			</div>
-			<span class="text-base font-semibold text-foreground tracking-tight">Guard AI</span>
-		</div>
+	<div class="h-16 flex items-center px-4 border-b border-sidebar-border shrink-0">
+		<img src="/logo.png" alt="Guard'AI" class="h-10 w-auto object-contain" />
 	</div>
 
 	<!-- Nav -->

@@ -69,17 +69,7 @@
 
 		<!-- Logo -->
 		<div class="flex justify-center mb-6">
-			<div class="relative w-12 h-12">
-				<svg class="w-12 h-12 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-					<path d="M12 2L4 6v5c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V6l-8-4z" stroke-linejoin="round"/>
-				</svg>
-				<div class="absolute inset-0 flex items-center justify-center">
-					<svg class="w-5 h-5 text-primary" viewBox="0 0 24 24" fill="currentColor">
-						<rect x="8" y="11" width="8" height="9" rx="1.5" />
-						<path d="M10 11V8a2 2 0 0 1 4 0v3" fill="none" stroke="white" stroke-width="1.5"/>
-					</svg>
-				</div>
-			</div>
+			<img src="/logo.png" alt="Guard'AI" class="h-16 w-auto object-contain" />
 		</div>
 
 		<!-- Mode toggle -->
