@@ -2,3 +2,5 @@
 export * from './event';
 export * from './stats';
 export * from './api';
+export * from './device';
+export * from './hub';
