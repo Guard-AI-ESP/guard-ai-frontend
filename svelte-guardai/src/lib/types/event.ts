@@ -33,6 +33,16 @@ export interface EventV1 {
 	confidence?: number;
 	is_known?: boolean;
 	bounding_box?: BoundingBox;
+
+	// Champs réseau (v1.1, présents pour source=network)
+	mac_address?: string;
+	ip_address?: string;
+	hostname?: string;
+	rssi?: number;
+	signature?: string;
+	scan_type?: 'host_discovery' | 'port_scan' | 'service_scan';
+	drop_count?: number;
+	direction?: 'inbound' | 'outbound';
 }
 
 export interface EventQueryParams {
