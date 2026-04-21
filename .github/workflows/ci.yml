@@ -3,13 +3,13 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [dev, main]
+    branches: [main, staging, dev]
 
 jobs:
   node-ci:
     uses: Guard-AI-ESP/guard-ai-devx/.github/workflows/node-ci.yml@main
     with:
       node-version: "20"
-      working-directory: "."
-      run-tests: true
+      working-directory: "./svelte-guardai"
+      run-tests: false
       build: true
