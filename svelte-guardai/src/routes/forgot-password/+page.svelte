@@ -83,7 +83,7 @@
 </script>
 
 <svelte:head>
-	<title>Mot de passe oubli\u00e9 - Guard AI</title>
+	<title>Mot de passe oublié - Guard AI</title>
 </svelte:head>
 
 <div class="min-h-screen flex relative bg-slate-50 overflow-hidden">
@@ -93,7 +93,7 @@
 			{#if showSuccessAlert}
 				<div class="bg-green-50 border border-green-200 rounded-xl px-4 py-3 flex items-center gap-3 shadow-soft">
 					<span class="material-icons text-green-500 text-[20px]">check_circle</span>
-					<span class="text-green-700 flex-1 text-sm font-medium">Code envoy\u00e9 avec succ\u00e8s</span>
+					<span class="text-green-700 flex-1 text-sm font-medium">Code envoyé avec succès</span>
 					<button onclick={() => showSuccessAlert = false} class="text-green-500 hover:text-green-700">
 						<span class="material-icons text-[18px]">close</span>
 					</button>
@@ -123,8 +123,8 @@
 
 			<!-- Title -->
 			<div class="text-center mb-8">
-				<h1 class="text-2xl font-bold text-slate-800 mb-2">Mot de passe oubli\u00e9</h1>
-				<p class="text-slate-400 text-sm">Entrez le code \u00e0 6 chiffres envoy\u00e9 \u00e0 votre email</p>
+				<h1 class="text-2xl font-bold text-slate-800 mb-2">Mot de passe oublié</h1>
+				<p class="text-slate-400 text-sm">Entrez le code à 6 chiffres envoyé à votre email</p>
 			</div>
 
 			<!-- Form -->
@@ -147,7 +147,7 @@
 							aria-label="Chiffre {index + 1}"
 						/>
 						{#if index < 5}
-							<span class="text-slate-300 text-lg">\u2013</span>
+							<span class="text-slate-300 text-lg">–</span>
 						{/if}
 					{/each}
 				</div>
@@ -158,7 +158,7 @@
 						Renvoyer le code
 					</button>
 					<a href="/login" class="text-slate-500 hover:text-slate-700 font-medium transition-colors">
-						Autre m\u00e9thode ?
+						Autre méthode ?
 					</a>
 				</div>
 
@@ -170,7 +170,7 @@
 				>
 					{#if isSubmitting}
 						<span class="material-icons text-[18px] animate-spin">refresh</span>
-						V\u00e9rification...
+						Vérification…
 					{:else}
 						Envoyer
 					{/if}
@@ -181,7 +181,7 @@
 			<div class="mt-6 text-center">
 				<a href="/login" class="text-sm text-slate-500 hover:text-slate-700 transition-colors flex items-center justify-center gap-1">
 					<span class="material-icons text-[16px]">arrow_back</span>
-					Retour \u00e0 la connexion
+					Retour à la connexion
 				</a>
 			</div>
 		</div>

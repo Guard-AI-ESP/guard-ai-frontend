@@ -29,7 +29,7 @@
 		<span class="text-slate-600 font-medium">Pare-feu</span>
 	</div>
 	<h1 class="text-2xl font-semibold text-slate-800">Configuration Pare-feu</h1>
-	<p class="text-slate-400 text-sm mt-0.5">R\u00e8gles de s\u00e9curit\u00e9 et filtrage r\u00e9seau</p>
+	<p class="text-slate-400 text-sm mt-0.5">Règles de sécurité et filtrage réseau</p>
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
@@ -44,13 +44,13 @@
 				</div>
 				<div>
 					<p class="text-sm font-medium text-slate-700">NAT (Network Address Translation)</p>
-					<p class="text-xs text-slate-400 mt-0.5">Traduit les adresses IP priv\u00e9es en adresse publique pour l'acc\u00e8s Internet</p>
+					<p class="text-xs text-slate-400 mt-0.5">Traduit les adresses IP privées en adresse publique pour l'accès Internet</p>
 				</div>
 			</div>
 			<button
 				type="button"
 				onclick={() => nat = !nat}
-				aria-label="Activer/d\u00e9sactiver NAT"
+				aria-label="Activer/désactiver NAT"
 				style={trackStyle(nat)}
 				class="shrink-0 ml-4"
 			>
@@ -66,13 +66,13 @@
 				</div>
 				<div>
 					<p class="text-sm font-medium text-slate-700">Pont d'interface WiFi</p>
-					<p class="text-xs text-slate-400 mt-0.5">Connecte le r\u00e9seau WiFi et filaire en un seul segment r\u00e9seau</p>
+					<p class="text-xs text-slate-400 mt-0.5">Connecte le réseau WiFi et filaire en un seul segment réseau</p>
 				</div>
 			</div>
 			<button
 				type="button"
 				onclick={() => bridgeWifi = !bridgeWifi}
-				aria-label="Activer/d\u00e9sactiver le pont WiFi"
+				aria-label="Activer/désactiver le pont WiFi"
 				style={trackStyle(bridgeWifi)}
 				class="shrink-0 ml-4"
 			>
@@ -88,13 +88,13 @@
 				</div>
 				<div>
 					<p class="text-sm font-medium text-slate-700">Transfert de trafic</p>
-					<p class="text-xs text-slate-400 mt-0.5">Autorise le routage de paquets entre les interfaces r\u00e9seau</p>
+					<p class="text-xs text-slate-400 mt-0.5">Autorise le routage de paquets entre les interfaces réseau</p>
 				</div>
 			</div>
 			<button
 				type="button"
 				onclick={() => trafficForward = !trafficForward}
-				aria-label="Activer/d\u00e9sactiver le transfert de trafic"
+				aria-label="Activer/désactiver le transfert de trafic"
 				style={trackStyle(trafficForward)}
 				class="shrink-0 ml-4"
 			>
@@ -110,7 +110,7 @@
 				class="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-medium transition-all {saved ? 'bg-green-500 text-white' : 'bg-primary text-white shadow-md shadow-primary/25 hover:bg-primary-dark'}"
 			>
 				<span class="material-icons text-[18px]">{saved ? 'check' : 'save'}</span>
-				{saved ? 'Enregistr\u00e9 !' : 'Enregistrer'}
+				{saved ? 'Enregistré !' : 'Enregistrer'}
 			</button>
 		</div>
 	</div>
@@ -121,7 +121,7 @@
 			<div class="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center text-red-500">
 				<span class="material-icons text-[18px]">shield</span>
 			</div>
-			<p class="text-sm font-semibold text-slate-800">\u00c9tat du pare-feu</p>
+			<p class="text-sm font-semibold text-slate-800">État du pare-feu</p>
 		</div>
 		<div class="flex flex-col gap-3">
 			{#each [
@@ -133,7 +133,7 @@
 					<p class="text-sm text-slate-600">{item.label}</p>
 					<span class="flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full {item.on ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}">
 						<span class="w-1.5 h-1.5 rounded-full {item.on ? 'bg-green-500' : 'bg-slate-400'}"></span>
-						{item.on ? 'Activ\u00e9' : 'D\u00e9sactiv\u00e9'}
+						{item.on ? 'Activé' : 'Désactivé'}
 					</span>
 				</div>
 			{/each}

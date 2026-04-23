@@ -134,7 +134,7 @@
 		<span class="text-slate-600 font-medium">DHCP</span>
 	</div>
 	<h1 class="text-2xl font-semibold text-slate-800">Configuration DHCP</h1>
-	<p class="text-slate-400 text-sm mt-0.5">Gestion automatique des adresses IP du r\u00e9seau</p>
+	<p class="text-slate-400 text-sm mt-0.5">Gestion automatique des adresses IP du réseau</p>
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
@@ -146,7 +146,7 @@
 			<p class="text-sm font-medium text-slate-700">Plage d'adresses IP</p>
 			<div class="flex flex-col sm:flex-row gap-3">
 				<div class="flex flex-col gap-1.5 flex-1">
-					<p class="text-xs text-slate-400">D\u00e9but</p>
+					<p class="text-xs text-slate-400">Début</p>
 					<div class="flex items-center gap-1">
 						{#each rangeStart as _, i}
 							<input
@@ -164,7 +164,7 @@
 						{/each}
 					</div>
 				</div>
-				<div class="flex items-end pb-2 text-slate-300 font-light text-xl hidden sm:block">\u2014</div>
+				<div class="flex items-end pb-2 text-slate-300 font-light text-xl hidden sm:block">—</div>
 				<div class="flex flex-col gap-1.5 flex-1">
 					<p class="text-xs text-slate-400">Fin</p>
 					<div class="flex items-center gap-1">
@@ -192,7 +192,7 @@
 		<!-- Netmask + Lease -->
 		<div class="grid grid-cols-2 gap-4">
 			<div class="flex flex-col gap-1.5">
-				<label for="netmask" class="text-sm font-medium text-slate-700">Masque r\u00e9seau (CIDR)</label>
+				<label for="netmask" class="text-sm font-medium text-slate-700">Masque réseau (CIDR)</label>
 				<div class="flex items-center gap-2">
 					<span class="text-slate-400 text-sm">/</span>
 					<input
@@ -206,7 +206,7 @@
 				</div>
 			</div>
 			<div class="flex flex-col gap-1.5">
-				<label for="lease" class="text-sm font-medium text-slate-700">Dur\u00e9e du bail IP</label>
+				<label for="lease" class="text-sm font-medium text-slate-700">Durée du bail IP</label>
 				<div class="flex items-center gap-2">
 					<input
 						id="lease"
@@ -298,12 +298,12 @@
 		<div class="flex items-center justify-between py-1">
 			<div>
 				<p class="text-sm font-medium text-slate-700">Journaux DHCP</p>
-				<p class="text-xs text-slate-400">Enregistrer les attributions et lib\u00e9rations d'adresses</p>
+				<p class="text-xs text-slate-400">Enregistrer les attributions et libérations d'adresses</p>
 			</div>
 			<button
 				type="button"
 				onclick={() => logsEnabled = !logsEnabled}
-				aria-label="Activer/d\u00e9sactiver les journaux"
+				aria-label="Activer/désactiver les journaux"
 				style={trackStyle(logsEnabled)}
 			>
 				<span style={thumbStyle(logsEnabled)}></span>
@@ -318,7 +318,7 @@
 				class="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-medium transition-all {saved ? 'bg-green-500 text-white' : 'bg-primary text-white shadow-md shadow-primary/25 hover:bg-primary-dark'}"
 			>
 				<span class="material-icons text-[18px]">{saved ? 'check' : 'save'}</span>
-				{saved ? 'Enregistr\u00e9 !' : 'Enregistrer'}
+				{saved ? 'Enregistré !' : 'Enregistrer'}
 			</button>
 		</div>
 	</div>
@@ -329,16 +329,16 @@
 			<div class="w-9 h-9 rounded-xl bg-purple-50 flex items-center justify-center text-purple-500">
 				<span class="material-icons text-[18px]">dns</span>
 			</div>
-			<p class="text-sm font-semibold text-slate-800">R\u00e9sum\u00e9 DHCP</p>
+			<p class="text-sm font-semibold text-slate-800">Résumé DHCP</p>
 		</div>
 		<div class="flex flex-col gap-3 text-sm">
 			<div class="flex flex-col gap-0.5">
 				<p class="text-xs text-slate-400 uppercase font-semibold tracking-wide">Plage IP</p>
-				<p class="font-mono text-slate-700">{rangeStart.join('.')} \u2014 {rangeEnd.join('.')}</p>
+				<p class="font-mono text-slate-700">{rangeStart.join('.')} — {rangeEnd.join('.')}</p>
 			</div>
 			<div class="flex flex-col gap-0.5">
 				<p class="text-xs text-slate-400 uppercase font-semibold tracking-wide">Masque / Bail</p>
-				<p class="font-mono text-slate-700">/{netmask} \u00b7 {ipLease}h</p>
+				<p class="font-mono text-slate-700">/{netmask} · {ipLease}h</p>
 			</div>
 			<div class="flex flex-col gap-0.5">
 				<p class="text-xs text-slate-400 uppercase font-semibold tracking-wide">Passerelle</p>

@@ -38,8 +38,8 @@
 {#if showSidebar}
 	<div class="bg-background-light font-display min-h-screen flex selection:bg-primary selection:text-white">
 		<Sidebar />
-		<main class="flex-1 h-screen overflow-y-auto">
-			<div class="p-8 max-w-[1600px] mx-auto flex flex-col gap-6">
+		<main class="flex-1 h-screen overflow-y-auto w-0 sm:w-auto">
+			<div class="p-4 sm:p-8 max-w-[1600px] mx-auto flex flex-col gap-6">
 				{@render children()}
 			</div>
 		</main>

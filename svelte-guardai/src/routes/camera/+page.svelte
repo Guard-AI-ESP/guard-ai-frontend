@@ -17,7 +17,7 @@
 	</div>
 </div>
 
-<div class="w-fit">
+<div class="w-full sm:w-fit">
 	<TabBar
 		tabs={[
 			{ value: 'galerie', label: 'Galerie', icon: 'photo_library' },

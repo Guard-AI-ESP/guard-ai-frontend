@@ -73,12 +73,12 @@
 </svelte:head>
 
 <!-- Page header -->
-<div class="flex items-center justify-between">
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
 	<div>
 		<h1 class="text-2xl font-semibold text-slate-800">Personnes connues</h1>
-		<p class="text-slate-400 text-sm mt-0.5">Base de visages enregistr\u00e9s dans le syst\u00e8me de reconnaissance</p>
+		<p class="text-slate-400 text-sm mt-0.5">Base de visages enregistrés dans le système de reconnaissance</p>
 	</div>
-	<div class="flex items-center gap-3">
+	<div class="flex items-center gap-3 shrink-0">
 		<span class="flex items-center gap-1.5 text-sm text-slate-500">
 			<span class="material-icons text-[18px]">people</span>
 			{persons.length} personne{persons.length !== 1 ? 's' : ''}
@@ -124,9 +124,9 @@
 			<div class="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
 				<span class="material-icons text-[28px] text-slate-300">person_off</span>
 			</div>
-			<h3 class="text-base font-medium text-slate-800 mb-1">Aucune personne enregistr\u00e9e</h3>
+			<h3 class="text-base font-medium text-slate-800 mb-1">Aucune personne enregistrée</h3>
 			<p class="text-sm text-slate-400 max-w-sm mx-auto">
-				Les visages enregistr\u00e9s via le POC de reconnaissance faciale appara\u00eetront ici automatiquement.
+				Les visages enregistrés via le POC de reconnaissance faciale apparaîtront ici automatiquement.
 			</p>
 		</div>
 	</div>

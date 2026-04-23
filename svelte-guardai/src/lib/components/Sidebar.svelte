@@ -29,7 +29,8 @@
 		{ label: 'RADIUS',          icon: 'lock',                href: '/cyber/radius',   sub: true },
 	];
 
-	let open = $state(true);
+	// Sur mobile, fermée par défaut
+	let open = $state(typeof window !== 'undefined' ? window.innerWidth >= 640 : true);
 
 	function isActive(href: string): boolean {
 		const path = $page.url.pathname;
@@ -45,8 +46,20 @@
 	}
 </script>
 
+<!-- Backdrop mobile -->
+{#if open}
+	<div
+		class="sm:hidden fixed inset-0 bg-black/30 z-30 backdrop-blur-sm"
+		role="button"
+		tabindex="-1"
+		aria-label="Fermer le menu"
+		onclick={() => open = false}
+		onkeydown={(e) => e.key === 'Escape' && (open = false)}
+	></div>
+{/if}
+
 <aside
-	class="relative flex-shrink-0 h-screen z-20 flex flex-col bg-white border-r border-slate-100 shadow-soft rounded-tr-[24px] rounded-br-[24px] transition-all duration-300 ease-in-out overflow-visible"
+	class="fixed sm:relative flex-shrink-0 h-screen z-40 sm:z-20 flex flex-col bg-white border-r border-slate-100 shadow-soft rounded-tr-[24px] rounded-br-[24px] transition-all duration-300 ease-in-out overflow-visible"
 	style="width: {open ? '256px' : '0px'}; min-width: {open ? '256px' : '0px'};"
 >
 	<div

@@ -23,16 +23,16 @@
 	};
 
 	const allCalls: Call[] = [
-		{ id: '1',  camera: 'Entr\u00e9e principale', type: 'visitor',  date: d(0, 14, 30), durationSec: 323, status: 'answered' },
-		{ id: '2',  camera: 'Portail arri\u00e8re',   type: 'outgoing', date: d(0, 13, 15), durationSec: 165, status: 'answered' },
-		{ id: '3',  camera: 'Entr\u00e9e principale', type: 'missed',   date: d(0, 11, 45), durationSec: 0,   status: 'missed'   },
-		{ id: '4',  camera: 'Entr\u00e9e principale', type: 'visitor',  date: d(0, 10, 20), durationSec: 492, status: 'answered' },
+		{ id: '1',  camera: 'Entrée principale', type: 'visitor',  date: d(0, 14, 30), durationSec: 323, status: 'answered' },
+		{ id: '2',  camera: 'Portail arrière',   type: 'outgoing', date: d(0, 13, 15), durationSec: 165, status: 'answered' },
+		{ id: '3',  camera: 'Entrée principale', type: 'missed',   date: d(0, 11, 45), durationSec: 0,   status: 'missed'   },
+		{ id: '4',  camera: 'Entrée principale', type: 'visitor',  date: d(0, 10, 20), durationSec: 492, status: 'answered' },
 		{ id: '5',  camera: 'Garage',            type: 'outgoing', date: d(0, 9, 30),  durationSec: 94,  status: 'answered' },
-		{ id: '6',  camera: 'Entr\u00e9e principale', type: 'missed',   date: d(1, 18, 45), durationSec: 0,   status: 'missed'   },
-		{ id: '7',  camera: 'Portail arri\u00e8re',   type: 'visitor',  date: d(1, 16, 30), durationSec: 776, status: 'answered' },
-		{ id: '8',  camera: 'Entr\u00e9e principale', type: 'outgoing', date: d(1, 14, 15), durationSec: 202, status: 'answered' },
+		{ id: '6',  camera: 'Entrée principale', type: 'missed',   date: d(1, 18, 45), durationSec: 0,   status: 'missed'   },
+		{ id: '7',  camera: 'Portail arrière',   type: 'visitor',  date: d(1, 16, 30), durationSec: 776, status: 'answered' },
+		{ id: '8',  camera: 'Entrée principale', type: 'outgoing', date: d(1, 14, 15), durationSec: 202, status: 'answered' },
 		{ id: '9',  camera: 'Garage',            type: 'visitor',  date: d(1, 12, 0),  durationSec: 405, status: 'answered' },
-		{ id: '10', camera: 'Entr\u00e9e principale', type: 'missed',   date: d(2, 10, 30), durationSec: 0,   status: 'missed'   },
+		{ id: '10', camera: 'Entrée principale', type: 'missed',   date: d(2, 10, 30), durationSec: 0,   status: 'missed'   },
 	];
 
 	let activeFilter = $state<'all' | CallType>('all');
@@ -44,8 +44,8 @@
 	let deleteTarget = $state<string | null>(null);
 
 	const sortOptions = [
-		{ value: 'date',     label: 'Date'   },
-		{ value: 'duration', label: 'Dur\u00e9e'  },
+		{ value: 'date',     label: 'Date'  },
+		{ value: 'duration', label: 'Durée' },
 	] as const;
 
 	const filtered = $derived.by(() => {
@@ -70,7 +70,7 @@
 	const missedCount   = $derived(allCalls.filter(c => c.status === 'missed').length);
 
 	function formatDuration(sec: number): string {
-		if (sec === 0) return '\u2014';
+		if (sec === 0) return '—';
 		const m = Math.floor(sec / 60);
 		const s = sec % 60;
 		return `${m}:${String(s).padStart(2, '0')}`;
@@ -84,9 +84,9 @@
 	}
 
 	function typeLabel(c: Call): { label: string; cls: string; icon: string } {
-		if (c.status === 'missed')   return { label: 'Manqu\u00e9',   cls: 'bg-red-100 text-red-600',    icon: 'call_missed'    };
-		if (c.type === 'visitor')    return { label: 'Entrant',  cls: 'bg-green-100 text-green-700', icon: 'call_received' };
-		return                              { label: 'Sortant',  cls: 'bg-blue-100 text-blue-700',  icon: 'call_made'     };
+		if (c.status === 'missed')   return { label: 'Manqué',  cls: 'bg-red-100 text-red-600',    icon: 'call_missed'   };
+		if (c.type === 'visitor')    return { label: 'Entrant', cls: 'bg-green-100 text-green-700', icon: 'call_received' };
+		return                              { label: 'Sortant', cls: 'bg-blue-100 text-blue-700',   icon: 'call_made'     };
 	}
 </script>
 
@@ -96,21 +96,20 @@
 
 <svelte:window onclick={(e) => { if (!(e.target as HTMLElement).closest('.sort-dropdown')) sortOpen = false; }} />
 
-<!-- Page header -->
 <div>
 	<h1 class="text-2xl font-semibold text-slate-800">Journal d'appels</h1>
 	<p class="text-slate-400 text-sm mt-0.5">Historique des interactions via sonnette et interphone</p>
 </div>
 
-<!-- KPIs -->
-<div class="flex gap-4">
+<!-- KPIs : 2 colonnes sur mobile, 4 sur desktop -->
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
 	{#each [
-		{ icon: 'call',          iconBg: 'bg-teal-50',   iconColor: 'text-teal-500',   label: 'Total interactions', value: totalCount.toString()    },
-		{ icon: 'call_received', iconBg: 'bg-green-50',  iconColor: 'text-green-500',  label: 'Appels entrants',    value: visitorCount.toString()  },
-		{ icon: 'call_made',     iconBg: 'bg-blue-50',   iconColor: 'text-blue-500',   label: 'Appels sortants',    value: outgoingCount.toString() },
-		{ icon: 'call_missed',   iconBg: 'bg-red-50',    iconColor: 'text-red-400',    label: 'Manqu\u00e9s',            value: missedCount.toString()   },
+		{ icon: 'call',          iconBg: 'bg-teal-50',  iconColor: 'text-teal-500',  label: 'Total interactions', value: totalCount.toString()    },
+		{ icon: 'call_received', iconBg: 'bg-green-50', iconColor: 'text-green-500', label: 'Appels entrants',    value: visitorCount.toString()  },
+		{ icon: 'call_made',     iconBg: 'bg-blue-50',  iconColor: 'text-blue-500',  label: 'Appels sortants',    value: outgoingCount.toString() },
+		{ icon: 'call_missed',   iconBg: 'bg-red-50',   iconColor: 'text-red-400',   label: 'Manqués',            value: missedCount.toString()   },
 	] as kpi}
-		<div class="flex-1 bg-white rounded-[20px] p-5 shadow-soft border border-slate-100 flex flex-col gap-3">
+		<div class="bg-white rounded-[20px] p-5 shadow-soft border border-slate-100 flex flex-col gap-3">
 			<div class="w-11 h-11 rounded-2xl {kpi.iconBg} flex items-center justify-center {kpi.iconColor}">
 				<span class="material-icons text-[22px]">{kpi.icon}</span>
 			</div>
@@ -122,54 +121,69 @@
 	{/each}
 </div>
 
-<!-- Controls row -->
-<div class="flex items-center justify-between gap-4 flex-wrap">
-	<div class="flex items-center gap-3 flex-wrap">
-		<!-- Search -->
-		<div class="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2.5 shadow-soft">
-			<span class="material-icons text-[16px] text-slate-400">search</span>
-			<input
-				type="text"
-				bind:value={searchQ}
-				placeholder="Rechercher une cam\u00e9ra\u2026"
-				class="bg-transparent outline-none text-sm text-slate-700 placeholder-slate-400 w-40"
-			/>
-		</div>
+<!-- Controls -->
+<div class="flex flex-col gap-3">
+	<!-- Recherche pleine largeur -->
+	<div class="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2.5 shadow-soft">
+		<span class="material-icons text-[16px] text-slate-400">search</span>
+		<input
+			type="text"
+			bind:value={searchQ}
+			placeholder="Rechercher une caméra…"
+			class="bg-transparent outline-none text-sm text-slate-700 placeholder-slate-400 flex-1"
+		/>
+		{#if searchQ}
+			<button onclick={() => searchQ = ''} class="text-slate-400 hover:text-slate-600">
+				<span class="material-icons text-[16px]">close</span>
+			</button>
+		{/if}
+	</div>
 
-		<!-- Type filter tabs -->
+	<!-- TabBar filtre -->
+	<div class="hidden sm:block w-fit">
 		<TabBar
 			tabs={[
-				{ value: 'all', label: 'Tous' },
-				{ value: 'visitor', label: 'Entrants' },
+				{ value: 'all',      label: 'Tous'     },
+				{ value: 'visitor',  label: 'Entrants' },
 				{ value: 'outgoing', label: 'Sortants' },
-				{ value: 'missed', label: 'Manqu\u00e9s' },
+				{ value: 'missed',   label: 'Manqués'  },
 			]}
 			active={activeFilter}
 			onchange={(v) => activeFilter = v as typeof activeFilter}
 		/>
+	</div>
+	<div class="sm:hidden w-full">
+		<TabBar
+			tabs={[
+				{ value: 'all',      label: 'Tous'     },
+				{ value: 'visitor',  label: 'Entrants' },
+				{ value: 'outgoing', label: 'Sortants' },
+				{ value: 'missed',   label: 'Manqués'  },
+			]}
+			active={activeFilter}
+			onchange={(v) => activeFilter = v as typeof activeFilter}
+			stretch={true}
+		/>
+	</div>
 
-		<!-- Date filter -->
-		<div class="w-44">
+	<!-- Date + tri -->
+	<div class="flex items-center gap-2 flex-wrap">
+		<div class="w-44 shrink-0">
 			<Datepicker bind:value={filterDate} placeholder="Filtrer par date" />
 		</div>
 		{#if filterDate}
-			<button
-				onclick={() => filterDate = ''}
-				class="text-slate-400 hover:text-red-400 transition-colors"
-				aria-label="Effacer le filtre date"
-			>
+			<button onclick={() => filterDate = ''} class="text-slate-400 hover:text-red-400 transition-colors" aria-label="Effacer">
 				<span class="material-icons text-[16px]">close</span>
 			</button>
 		{/if}
 
-		<!-- Sort dropdown -->
 		<div class="relative sort-dropdown">
 			<button
 				onclick={() => sortOpen = !sortOpen}
 				class="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium text-slate-600 shadow-soft hover:border-slate-300 transition-colors"
 			>
 				<span class="material-icons text-[16px] text-slate-400">sort</span>
-				Trier par : {sortOptions.find(o => o.value === sortBy)?.label}
+				<span class="hidden sm:inline">Trier par : </span>{sortOptions.find(o => o.value === sortBy)?.label}
 				<span class="material-icons text-[14px] text-slate-400">{sortOpen ? 'expand_less' : 'expand_more'}</span>
 			</button>
 			{#if sortOpen}
@@ -193,19 +207,24 @@
 				</div>
 			{/if}
 		</div>
+
+		<div class="flex items-center gap-1.5 text-sm text-slate-400">
+			<span class="material-icons text-[18px]">call</span>
+			<span>{filtered.length} appels</span>
+		</div>
 	</div>
 </div>
 
-<!-- Table -->
-<div class="bg-white rounded-[20px] shadow-soft border border-slate-100 overflow-hidden">
+<!-- Tableau desktop -->
+<div class="hidden sm:block bg-white rounded-[20px] shadow-soft border border-slate-100 overflow-hidden">
 	<table class="w-full">
 		<thead>
 			<tr class="border-b border-slate-100 text-xs font-semibold text-slate-400 uppercase tracking-wide">
 				<th class="px-5 py-3 text-left">Type</th>
-				<th class="px-5 py-3 text-left">Cam\u00e9ra / Sonnette</th>
+				<th class="px-5 py-3 text-left">Caméra / Sonnette</th>
 				<th class="px-5 py-3 text-left">Date</th>
 				<th class="px-5 py-3 text-left">Heure</th>
-				<th class="px-5 py-3 text-left">Dur\u00e9e</th>
+				<th class="px-5 py-3 text-left">Durée</th>
 				<th class="px-5 py-3 text-left">Statut</th>
 				<th class="px-5 py-3 text-left w-20"></th>
 			</tr>
@@ -213,52 +232,31 @@
 		<tbody>
 			{#if filtered.length === 0}
 				<tr>
-					<td colspan="7" class="py-12 text-center text-slate-400 text-sm">Aucun appel trouv\u00e9</td>
+					<td colspan="7" class="py-12 text-center text-slate-400 text-sm">Aucun appel trouvé</td>
 				</tr>
 			{:else}
 				{#each filtered as call (call.id)}
 					{@const tl = typeLabel(call)}
-					<tr class="border-b border-slate-50 last:border-0 hover:bg-slate-50 transition-colors group
-						{call.status === 'missed' ? 'bg-red-50/40' : ''}">
-
-						<!-- Type icon -->
+					<tr class="border-b border-slate-50 last:border-0 hover:bg-slate-50 transition-colors group {call.status === 'missed' ? 'bg-red-50/40' : ''}">
 						<td class="px-5 py-4">
 							<div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 {tl.cls.split(' ')[0]}">
 								<span class="material-icons text-[18px] {tl.cls.split(' ')[1]}">{tl.icon}</span>
 							</div>
 						</td>
-
-						<!-- Camera -->
 						<td class="px-5 py-4">
-							<div class="flex items-center gap-2">
-								<p class="text-sm font-semibold text-slate-800">{call.camera}</p>
-							</div>
+							<p class="text-sm font-semibold text-slate-800">{call.camera}</p>
 							<p class="text-xs text-slate-400">
-								{call.type === 'visitor' ? 'Appel entrant' : call.type === 'outgoing' ? 'Appel sortant' : 'Non r\u00e9pondu'}
+								{call.type === 'visitor' ? 'Appel entrant' : call.type === 'outgoing' ? 'Appel sortant' : 'Non répondu'}
 							</p>
 						</td>
-
-						<!-- Date -->
-						<td class="px-5 py-4 text-sm text-slate-500 whitespace-nowrap">
-							{formatDate(call.date)}
-						</td>
-
-						<!-- Time -->
+						<td class="px-5 py-4 text-sm text-slate-500 whitespace-nowrap">{formatDate(call.date)}</td>
 						<td class="px-5 py-4 text-sm text-slate-500 whitespace-nowrap">
 							{call.date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
 						</td>
-
-						<!-- Duration -->
-						<td class="px-5 py-4 text-sm font-medium text-slate-600 whitespace-nowrap">
-							{formatDuration(call.durationSec)}
-						</td>
-
-						<!-- Status badge -->
+						<td class="px-5 py-4 text-sm font-medium text-slate-600 whitespace-nowrap">{formatDuration(call.durationSec)}</td>
 						<td class="px-5 py-4">
 							<span class="text-[11px] font-semibold px-2.5 py-1 rounded-full {tl.cls}">{tl.label}</span>
 						</td>
-
-						<!-- Actions -->
 						<td class="px-5 py-4">
 							<div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
 								<button
@@ -275,6 +273,40 @@
 			{/if}
 		</tbody>
 	</table>
+</div>
+
+<!-- Cards mobile -->
+<div class="sm:hidden flex flex-col gap-3">
+	{#if filtered.length === 0}
+		<p class="py-12 text-center text-slate-400 text-sm">Aucun appel trouvé</p>
+	{:else}
+		{#each filtered as call (call.id)}
+			{@const tl = typeLabel(call)}
+			<div class="bg-white rounded-2xl shadow-soft border border-slate-100 p-4 flex items-center gap-3 {call.status === 'missed' ? 'border-l-2 border-l-red-400' : ''}">
+				<div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 {tl.cls.split(' ')[0]}">
+					<span class="material-icons text-[20px] {tl.cls.split(' ')[1]}">{tl.icon}</span>
+				</div>
+				<div class="flex-1 min-w-0">
+					<p class="text-sm font-semibold text-slate-800 truncate">{call.camera}</p>
+					<p class="text-xs text-slate-400 mt-0.5">
+						{call.type === 'visitor' ? 'Appel entrant' : call.type === 'outgoing' ? 'Appel sortant' : 'Non répondu'}
+						· {formatDate(call.date)} · {call.date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+					</p>
+				</div>
+				<div class="flex flex-col items-end gap-2 shrink-0">
+					<span class="text-[11px] font-semibold px-2 py-0.5 rounded-full {tl.cls}">{tl.label}</span>
+					<span class="text-xs font-medium text-slate-500">{formatDuration(call.durationSec)}</span>
+				</div>
+				<button
+					aria-label="Supprimer"
+					onclick={() => deleteTarget = call.id}
+					class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-red-400 shrink-0"
+				>
+					<span class="material-icons text-[14px]">delete_outline</span>
+				</button>
+			</div>
+		{/each}
+	{/if}
 </div>
 
 {#if deleteTarget}

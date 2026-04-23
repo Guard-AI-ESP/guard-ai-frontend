@@ -58,11 +58,11 @@
 </script>
 
 <div class="glass-panel rounded-[24px] shadow-glass h-full flex flex-col overflow-hidden border border-white/60 dark:border-white/10">
-	<div class="m-4">
+	<div class="m-4 w-fit">
 		<TabBar
 			tabs={[
 				{ value: 'Activité', label: 'Activité' },
-				{ value: 'Journaux', label: 'Journaux' },
+				{ value: 'Notifications', label: 'Notifications' },
 			]}
 			active={activeTab}
 			onchange={(v) => activeTab = v}

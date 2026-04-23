@@ -110,65 +110,80 @@
 	{/each}
 </div>
 
-<div class="flex items-center justify-between gap-4 flex-wrap">
-	<TabBar
-		tabs={[
-			{ value: 'Tous', label: 'Tous' },
-			{ value: 'Entrée', label: 'Entrée' },
-			{ value: 'Garage', label: 'Garage' },
-			{ value: 'Porte arrière', label: 'Porte arrière' },
-		]}
-		active={activeCamera}
-		onchange={(v) => activeCamera = v as typeof activeCamera}
-	/>
-
-	<div class="flex items-center gap-2 flex-wrap">
-		<div class="w-44">
-			<Datepicker bind:value={filterDate} placeholder="Filtrer par date" />
+<div class="flex flex-col gap-3">
+	<div class="flex flex-col gap-3">
+		<!-- TabBar sur desktop, select sur mobile -->
+		<div class="hidden sm:block sm:w-fit">
+			<TabBar
+				tabs={[
+					{ value: 'Tous', label: 'Tous' },
+					{ value: 'Entrée', label: 'Entrée' },
+					{ value: 'Garage', label: 'Garage' },
+					{ value: 'Porte arrière', label: 'Porte arrière' },
+				]}
+				active={activeCamera}
+				onchange={(v) => activeCamera = v as typeof activeCamera}
+			/>
 		</div>
-		<div class="w-28">
-			<Timepicker bind:value={filterTime} placeholder="Heure" />
-		</div>
-		{#if filterDate || filterTime}
-			<button onclick={() => { filterDate = ''; filterTime = ''; }} class="text-slate-400 hover:text-red-400 transition-colors" aria-label="Effacer">
-				<span class="material-icons text-[16px]">close</span>
-			</button>
-		{/if}
+		<select
+			class="sm:hidden w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-700 shadow-soft outline-none"
+			value={activeCamera}
+			onchange={(e) => activeCamera = (e.target as HTMLSelectElement).value as typeof activeCamera}
+		>
+			<option value="Tous">Tous</option>
+			<option value="Entrée">Entrée</option>
+			<option value="Garage">Garage</option>
+			<option value="Porte arrière">Porte arrière</option>
+		</select>
 
-		<div class="relative">
-			<button
-				onclick={() => sortOpen = !sortOpen}
-				class="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-600 shadow-soft hover:border-slate-300 transition-colors"
-			>
-				<span class="material-icons text-[16px] text-slate-400">sort</span>
-				Trier par : {sortOptions.find(o => o.value === sortBy)?.label}
-				<span class="material-icons text-[14px] text-slate-400">{sortOpen ? 'expand_less' : 'expand_more'}</span>
-			</button>
-			{#if sortOpen}
-				<div class="absolute right-0 top-full mt-1 bg-white rounded-xl shadow-lg border border-slate-100 py-1 z-30 min-w-[160px]">
-					{#each sortOptions as opt}
-						<button
-							onclick={() => {
-								if (sortBy === opt.value) sortDir = sortDir === 'desc' ? 'asc' : 'desc';
-								else { sortBy = opt.value; sortDir = 'desc'; }
-								sortOpen = false;
-							}}
-							class="w-full flex items-center justify-between px-4 py-2.5 text-sm text-left transition-colors
-								{sortBy === opt.value ? 'text-primary font-medium' : 'text-slate-600 hover:bg-slate-50'}"
-						>
-							{opt.label}
-							{#if sortBy === opt.value}
-								<span class="material-icons text-[14px]">{sortDir === 'desc' ? 'arrow_downward' : 'arrow_upward'}</span>
-							{/if}
-						</button>
-					{/each}
-				</div>
+		<div class="flex items-center gap-2 flex-wrap">
+			<div class="w-44 shrink-0">
+				<Datepicker bind:value={filterDate} placeholder="Filtrer par date" />
+			</div>
+			<div class="w-28 shrink-0">
+				<Timepicker bind:value={filterTime} placeholder="Heure" />
+			</div>
+			{#if filterDate || filterTime}
+				<button onclick={() => { filterDate = ''; filterTime = ''; }} class="text-slate-400 hover:text-red-400 transition-colors" aria-label="Effacer">
+					<span class="material-icons text-[16px]">close</span>
+				</button>
 			{/if}
-		</div>
 
-		<div class="flex items-center gap-1.5 text-sm text-slate-400">
-			<span class="material-icons text-[18px]">photo_library</span>
-			<span>{filtered.length} photos</span>
+			<div class="relative">
+				<button
+					onclick={() => sortOpen = !sortOpen}
+					class="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-600 shadow-soft hover:border-slate-300 transition-colors"
+				>
+					<span class="material-icons text-[16px] text-slate-400">sort</span>
+					<span class="hidden sm:inline">Trier par : </span>{sortOptions.find(o => o.value === sortBy)?.label}
+					<span class="material-icons text-[14px] text-slate-400">{sortOpen ? 'expand_less' : 'expand_more'}</span>
+				</button>
+				{#if sortOpen}
+					<div class="absolute right-0 top-full mt-1 bg-white rounded-xl shadow-lg border border-slate-100 py-1 z-30 min-w-[160px]">
+						{#each sortOptions as opt}
+							<button
+								onclick={() => {
+									if (sortBy === opt.value) sortDir = sortDir === 'desc' ? 'asc' : 'desc';
+									else { sortBy = opt.value; sortDir = 'desc'; }
+									sortOpen = false;
+								}}
+								class="w-full flex items-center justify-between px-4 py-2.5 text-sm text-left transition-colors
+									{sortBy === opt.value ? 'text-primary font-medium' : 'text-slate-600 hover:bg-slate-50'}"
+							>
+								{opt.label}
+								{#if sortBy === opt.value}
+									<span class="material-icons text-[14px]">{sortDir === 'desc' ? 'arrow_downward' : 'arrow_upward'}</span>
+								{/if}
+							</button>
+						{/each}
+					</div>
+				{/if}
+			</div>
+
+			<div class="flex items-center gap-1.5 text-sm text-slate-400">
+				<span class="material-icons text-[18px]">photo_library</span>
+				<span>{filtered.length} photos</span>
+			</div>
 		</div>
 	</div>
 </div>

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { tick, untrack } from 'svelte';
+	import { tick } from 'svelte';
 
 	type Tab = {
 		value: string;
@@ -11,6 +11,7 @@
 		tabs: Tab[];
 		active: string;
 		onchange: (value: string) => void;
+		stretch?: boolean;
 	};
 
 	let props: Props = $props();
@@ -50,7 +51,8 @@
 		<button
 			data-tab-value={tab.value}
 			onclick={() => props.onchange(tab.value)}
-			class="relative z-10 flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-medium transition-colors duration-200
+			class="relative z-10 flex items-center justify-center gap-2 px-5 py-2 rounded-xl text-sm font-medium transition-colors duration-200
+				{props.stretch ? 'flex-1' : ''}
 				{props.active === tab.value ? 'text-white' : 'text-slate-500 hover:text-slate-800'}"
 		>
 			{#if tab.icon}

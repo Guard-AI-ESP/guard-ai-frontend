@@ -125,23 +125,36 @@
 </div>
 
 <div class="flex flex-col gap-3">
-	<div class="flex items-center justify-between gap-4 flex-wrap">
-		<TabBar
-			tabs={[
-				{ value: 'Tous', label: 'Tous' },
-				{ value: 'Entrée', label: 'Entrée' },
-				{ value: 'Garage', label: 'Garage' },
-				{ value: 'Porte arrière', label: 'Porte arrière' },
-			]}
-			active={activeCamera}
-			onchange={(v) => activeCamera = v as typeof activeCamera}
-		/>
+	<div class="flex flex-col gap-3">
+		<!-- TabBar sur desktop, select sur mobile -->
+		<div class="hidden sm:block">
+			<TabBar
+				tabs={[
+					{ value: 'Tous', label: 'Tous' },
+					{ value: 'Entrée', label: 'Entrée' },
+					{ value: 'Garage', label: 'Garage' },
+					{ value: 'Porte arrière', label: 'Porte arrière' },
+				]}
+				active={activeCamera}
+				onchange={(v) => activeCamera = v as typeof activeCamera}
+			/>
+		</div>
+		<select
+			class="sm:hidden w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-700 shadow-soft outline-none"
+			value={activeCamera}
+			onchange={(e) => activeCamera = (e.target as HTMLSelectElement).value as typeof activeCamera}
+		>
+			<option value="Tous">Tous</option>
+			<option value="Entrée">Entrée</option>
+			<option value="Garage">Garage</option>
+			<option value="Porte arrière">Porte arrière</option>
+		</select>
 
 		<div class="flex items-center gap-2 flex-wrap">
-			<div class="w-44">
+			<div class="w-44 shrink-0">
 				<Datepicker bind:value={filterDate} placeholder="Filtrer par date" />
 			</div>
-			<div class="w-28">
+			<div class="w-28 shrink-0">
 				<Timepicker bind:value={filterTime} placeholder="Heure" />
 			</div>
 
@@ -155,13 +168,13 @@
 				</button>
 			{/if}
 
-			<div class="relative">
+			<div class="relative ml-auto sm:ml-0">
 				<button
 					onclick={() => sortOpen = !sortOpen}
 					class="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-600 shadow-soft hover:border-slate-300 transition-colors"
 				>
 					<span class="material-icons text-[16px] text-slate-400">sort</span>
-					Trier par : {sortOptions.find(o => o.value === sortBy)?.label}
+					<span class="hidden sm:inline">Trier par : </span>{sortOptions.find(o => o.value === sortBy)?.label}
 					<span class="material-icons text-[14px] text-slate-400">{sortOpen ? 'expand_less' : 'expand_more'}</span>
 				</button>
 				{#if sortOpen}
@@ -189,7 +202,8 @@
 	</div>
 </div>
 
-<div class="bg-white rounded-2xl shadow-soft border border-slate-100 overflow-hidden">
+<!-- Tableau sur desktop, cards sur mobile -->
+<div class="hidden sm:block bg-white rounded-2xl shadow-soft border border-slate-100 overflow-hidden">
 	<table class="w-full">
 		<thead>
 			<tr class="border-b border-slate-100 text-xs font-semibold text-slate-400 uppercase tracking-wide">
@@ -254,6 +268,50 @@
 			{/if}
 		</tbody>
 	</table>
+</div>
+
+<!-- Cards mobile -->
+<div class="sm:hidden flex flex-col gap-3">
+	{#if filtered.length === 0}
+		<p class="py-12 text-center text-slate-400 text-sm">Aucun enregistrement trouvé</p>
+	{:else}
+		{#each filtered as rec}
+			{@const days = daysLeft(rec.expiresAt)}
+			<div class="bg-white rounded-2xl shadow-soft border border-slate-100 p-4 flex items-center gap-3">
+				<button
+					aria-label="Lire"
+					onclick={() => playing = playing === rec.id ? null : rec.id}
+					class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all
+						{playing === rec.id
+							? 'bg-primary text-white shadow-md shadow-primary/25'
+							: 'bg-slate-100 text-slate-500'}"
+				>
+					<span class="material-icons text-[20px]">{playing === rec.id ? 'pause' : 'play_arrow'}</span>
+				</button>
+				<div class="flex-1 min-w-0">
+					<p class="text-sm font-medium text-slate-800 truncate">{rec.title}</p>
+					<p class="text-xs text-slate-400 mt-0.5">{rec.camera} • {formatDate(rec.dateTs)} • {formatDuration(rec.durationSec)} • {rec.sizeMb} MB</p>
+				</div>
+				<div class="flex flex-col items-end gap-2 shrink-0">
+					<span class="text-[11px] font-semibold px-2 py-0.5 rounded-full {expiryClass(days)}">
+						{days <= 0 ? 'Expiré' : `J-${days}`}
+					</span>
+					<div class="flex gap-1">
+						<button aria-label="Télécharger" class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500">
+							<span class="material-icons text-[14px]">download</span>
+						</button>
+						<button
+							aria-label="Supprimer"
+							onclick={() => deleteTarget = rec.id}
+							class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-red-400"
+						>
+							<span class="material-icons text-[14px]">delete_outline</span>
+						</button>
+					</div>
+				</div>
+			</div>
+		{/each}
+	{/if}
 </div>
 
 {#if deleteTarget !== null}
