@@ -1,211 +1,136 @@
 <script lang="ts">
-	import { page } from '$app/state';
-	import { Separator } from '$lib/components/ui/separator';
-	import { Avatar, AvatarFallback } from '$lib/components/ui/avatar';
-	import {
-		LayoutDashboard, ShieldCheck, Camera, MessageSquare, Zap,
-		CalendarDays, Phone, Settings, CircleHelp, LogOut,
-		ChevronDown, ChevronRight, Video, Users
-	} from '@lucide/svelte';
-	import { authStore, authToken } from '$lib/stores/auth.svelte';
+	import { page } from '$app/stores';
+	import { authStore } from '$lib/stores/auth.svelte';
 
-	let isCameraOpen = $state(false);
-	let isEventOpen = $state(false);
+	type NavItem = {
+		label: string;
+		icon: string;
+		href: string;
+		badge?: number;
+		sub?: boolean;
+	};
 
-	function isActive(path: string): boolean {
-		return page.url.pathname === path || page.url.pathname.startsWith(path + '/');
+	const navItems: NavItem[] = [
+		{ label: 'Dashboard Caméra',       icon: 'dashboard',     href: '/dashboard'    },
+		{ label: 'Caméra',                 icon: 'videocam',      href: '/camera',     sub: true },
+		{ label: 'Messages',               icon: 'chat',          href: '/messages',   sub: true, badge: 3 },
+		{ label: 'Détecteurs de présence', icon: 'sensors',       href: '/detectors',  sub: true },
+		{ label: 'Événements',             icon: 'notifications', href: '/events',     sub: true },
+		{ label: 'Appels',                 icon: 'call',          href: '/calls',      sub: true },
+		{ label: 'Personnes',              icon: 'people',        href: '/persons',    sub: true },
+		{ label: 'Capteurs IoT',           icon: 'memory',        href: '/sensors',    sub: true },
+	];
+
+	const cyberItems: NavItem[] = [
+		{ label: 'Dashboard Cyber', icon: 'shield',              href: '/cyber'          },
+		{ label: 'WiFi',            icon: 'wifi',                href: '/cyber/wifi',     sub: true },
+		{ label: 'Pare-feu',       icon: 'local_fire_department', href: '/cyber/firewall', sub: true },
+		{ label: 'DHCP',            icon: 'dns',                 href: '/cyber/dhcp',     sub: true },
+		{ label: 'RADIUS',          icon: 'lock',                href: '/cyber/radius',   sub: true },
+	];
+
+	// Sur mobile, fermée par défaut
+	let open = $state(typeof window !== 'undefined' ? window.innerWidth >= 640 : true);
+
+	function isActive(href: string): boolean {
+		const path = $page.url.pathname;
+		if (href === '/dashboard') return path === '/dashboard' || path.startsWith('/camera') || path.startsWith('/messages') || path.startsWith('/detectors') || path.startsWith('/events') || path.startsWith('/calls') || path.startsWith('/persons');
+		if (href === '/cyber') return path.startsWith('/cyber');
+		return path === href;
 	}
 
-	$effect(() => {
-		if (page.url.pathname.startsWith('/recordings')) isCameraOpen = true;
-		if (page.url.pathname.startsWith('/events')) isEventOpen = true;
-	});
-
-	/** Extrait l'email depuis le payload JWT (sans vérification de signature) */
-	function getUserEmail(token: string | null): string {
-		if (!token) return '';
-		try {
-			const payload = JSON.parse(atob(token.split('.')[1]));
-			return payload.sub ?? '';
-		} catch {
-			return '';
-		}
+	function activeClass(item: NavItem): string {
+		if (!isActive(item.href)) return 'text-slate-500 hover:text-slate-800 hover:bg-slate-50';
+		if (item.sub) return 'text-primary bg-primary/10 font-semibold';
+		return 'text-white bg-primary shadow-lg shadow-primary/25';
 	}
-
-	/** Initiales pour l'avatar (ex: "ab@x.com" → "AB") */
-	function getInitials(email: string): string {
-		if (!email) return '?';
-		return email.slice(0, 2).toUpperCase();
-	}
-
-	const navItemClass = (active: boolean) =>
-		`w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors ${
-			active
-				? 'bg-accent text-foreground font-medium border-l-2 border-primary pl-[10px]'
-				: 'text-muted-foreground hover:bg-accent hover:text-foreground border-l-2 border-transparent pl-[10px]'
-		}`;
-
-	const subNavItemClass = (active: boolean) =>
-		`w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors ${
-			active
-				? 'text-primary font-medium bg-primary/5'
-				: 'text-muted-foreground hover:bg-accent hover:text-foreground'
-		}`;
 </script>
 
-<aside class="w-64 h-screen bg-sidebar border-r border-sidebar-border flex flex-col overflow-y-auto">
+<!-- Backdrop mobile -->
+{#if open}
+	<div
+		class="sm:hidden fixed inset-0 bg-black/30 z-30 backdrop-blur-sm"
+		role="button"
+		tabindex="-1"
+		aria-label="Fermer le menu"
+		onclick={() => open = false}
+		onkeydown={(e) => e.key === 'Escape' && (open = false)}
+	></div>
+{/if}
 
-	<!-- Logo -->
-	<div class="h-14 flex items-center px-4 border-b border-sidebar-border shrink-0">
-		<div class="flex items-center gap-2.5">
-			<div class="relative w-8 h-8 shrink-0">
-				<svg class="w-8 h-8 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-					<path d="M12 2L4 6v5c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V6l-8-4z" stroke-linejoin="round"/>
-				</svg>
-				<div class="absolute inset-0 flex items-center justify-center">
-					<svg class="w-3.5 h-3.5 text-primary" viewBox="0 0 24 24" fill="currentColor">
-						<rect x="8" y="11" width="8" height="9" rx="1.5" />
-						<path d="M10 11V8a2 2 0 0 1 4 0v3" fill="none" stroke="white" stroke-width="1.5"/>
-					</svg>
-				</div>
+<aside
+	class="fixed sm:relative flex-shrink-0 h-screen z-40 sm:z-20 flex flex-col bg-white border-r border-slate-100 shadow-soft rounded-tr-[24px] rounded-br-[24px] transition-all duration-300 ease-in-out overflow-visible"
+	style="width: {open ? '256px' : '0px'}; min-width: {open ? '256px' : '0px'};"
+>
+	<div
+		class="flex flex-col h-full transition-opacity duration-200"
+		style="opacity: {open ? 1 : 0}; pointer-events: {open ? 'auto' : 'none'}; min-width: 256px;"
+	>
+		<div class="flex items-center gap-3 px-6 py-7">
+			<div class="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+				<span class="material-icons text-xl">security</span>
 			</div>
-			<span class="text-base font-semibold text-foreground tracking-tight">Guard AI</span>
-		</div>
-	</div>
-
-	<!-- Nav -->
-	<nav class="flex-1 px-3 py-4 space-y-5 overflow-y-auto">
-
-		<!-- Main -->
-		<div>
-			<p class="text-[11px] font-medium text-muted-foreground uppercase tracking-wider px-3 mb-2">Main</p>
-			<ul class="space-y-0.5">
-				<li>
-					<a href="/dashboard" class={navItemClass(isActive('/dashboard') && !isActive('/dashboard-cyber'))}>
-						<LayoutDashboard class="w-4 h-4 shrink-0" />
-						Dashboard
-					</a>
-				</li>
-				<li>
-					<a href="/dashboard-cyber" class={navItemClass(isActive('/dashboard-cyber'))}>
-						<ShieldCheck class="w-4 h-4 shrink-0" />
-						Dashboard Cyber
-					</a>
-				</li>
-				<li>
-					<button
-						onclick={() => (isCameraOpen = !isCameraOpen)}
-						class={navItemClass(isActive('/recordings'))}
-					>
-						<Camera class="w-4 h-4 shrink-0" />
-						<span class="flex-1 text-left">Caméra</span>
-						<ChevronDown class="w-3.5 h-3.5 transition-transform {isCameraOpen ? 'rotate-180' : ''}" />
-					</button>
-					{#if isCameraOpen}
-						<ul class="mt-0.5 ml-6 space-y-0.5">
-							<li>
-								<button class={subNavItemClass(false)}>
-									<Video class="w-3.5 h-3.5" /> Live View
-								</button>
-							</li>
-							<li>
-								<a href="/recordings" class={subNavItemClass(isActive('/recordings'))}>
-									<ChevronRight class="w-3.5 h-3.5" /> Recordings
-								</a>
-							</li>
-						</ul>
-					{/if}
-				</li>
-				<li>
-					<a href="/messages" class={navItemClass(isActive('/messages'))}>
-						<MessageSquare class="w-4 h-4 shrink-0" />
-						Messages
-					</a>
-				</li>
-				<li>
-					<a href="/detectors" class={navItemClass(isActive('/detectors'))}>
-						<Zap class="w-4 h-4 shrink-0" />
-						Détecteurs
-					</a>
-				</li>
-				<li>
-					<button
-						onclick={() => (isEventOpen = !isEventOpen)}
-						class={navItemClass(isActive('/events'))}
-					>
-						<CalendarDays class="w-4 h-4 shrink-0" />
-						<span class="flex-1 text-left">Évènements</span>
-						<ChevronDown class="w-3.5 h-3.5 transition-transform {isEventOpen ? 'rotate-180' : ''}" />
-					</button>
-					{#if isEventOpen}
-						<ul class="mt-0.5 ml-6 space-y-0.5">
-							<li>
-								<a href="/events/new" class={subNavItemClass(isActive('/events/new'))}>
-									<ChevronRight class="w-3.5 h-3.5" /> Nouveau
-								</a>
-							</li>
-						</ul>
-					{/if}
-				</li>
-				<li>
-					<a href="/persons" class={navItemClass(isActive('/persons'))}>
-						<Users class="w-4 h-4 shrink-0" />
-						Personnes
-					</a>
-				</li>
-				<li>
-					<a href="/journal-appels" class={navItemClass(isActive('/journal-appels'))}>
-						<Phone class="w-4 h-4 shrink-0" />
-						Journal d'appels
-					</a>
-				</li>
-			</ul>
+			<span class="text-slate-900 font-bold text-lg tracking-tight">GuardAI</span>
 		</div>
 
-		<!-- Settings -->
-		<div>
-			<p class="text-[11px] font-medium text-muted-foreground uppercase tracking-wider px-3 mb-2">Paramètres</p>
-			<ul class="space-y-0.5">
-				<li>
-					<a href="/settings" class={navItemClass(isActive('/settings'))}>
-						<Settings class="w-4 h-4 shrink-0" />
-						Settings
-					</a>
-				</li>
-				<li>
-					<button class={navItemClass(false)}>
-						<CircleHelp class="w-4 h-4 shrink-0" />
-						Help
-					</button>
-				</li>
-			</ul>
-		</div>
-	</nav>
+		<p class="px-6 mb-2 text-[10px] font-semibold tracking-widest text-slate-400 uppercase">Surveillance</p>
 
-	<!-- User footer -->
-	<div class="border-t border-sidebar-border p-3 shrink-0">
-		<Separator class="mb-3" />
-		{#snippet userFooter()}
-			{@const email = getUserEmail($authToken)}
-			<div class="flex items-center gap-3 px-1">
-				<Avatar class="h-8 w-8 shrink-0">
-					<AvatarFallback class="bg-primary/10 text-primary text-xs font-semibold">
-						{getInitials(email)}
-					</AvatarFallback>
-				</Avatar>
-				<div class="flex-1 min-w-0">
-					<p class="text-sm font-medium text-foreground truncate">{email || 'Utilisateur'}</p>
-					<p class="text-xs text-muted-foreground truncate">Guard AI</p>
-				</div>
-				<button
-					onclick={() => authStore.logout()}
-					title="Se déconnecter"
-					class="text-muted-foreground hover:text-destructive transition-colors"
+		<nav class="flex flex-col px-3 gap-0.5">
+			{#each navItems as item}
+				<a
+					href={item.href}
+					class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors whitespace-nowrap
+						{activeClass(item)}"
 				>
-					<LogOut class="w-4 h-4" />
-				</button>
-			</div>
-		{/snippet}
-		{@render userFooter()}
+					<span class="material-icons text-[20px]">{item.icon}</span>
+					<span class="flex-1">{item.label}</span>
+					{#if item.badge}
+						<span class="bg-primary/20 text-primary text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
+							{item.badge}
+						</span>
+					{/if}
+				</a>
+			{/each}
+		</nav>
+
+		<div class="px-4 my-3">
+			<div class="h-px bg-slate-100"></div>
+		</div>
+		<p class="px-6 mb-2 text-[10px] font-semibold tracking-widest text-slate-400 uppercase">Cybersécurité</p>
+		<nav class="flex-1 flex flex-col px-3 gap-0.5">
+			{#each cyberItems as item}
+				<a
+					href={item.href}
+					class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors whitespace-nowrap
+						{activeClass(item)}"
+				>
+					<span class="material-icons text-[20px]">{item.icon}</span>
+					<span class="flex-1">{item.label}</span>
+				</a>
+			{/each}
+		</nav>
+
+		<div class="px-3 pb-6 flex flex-col gap-0.5">
+			<div class="h-px bg-slate-100 mx-3 mb-3"></div>
+			<a href="/settings" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors whitespace-nowrap">
+				<span class="material-icons text-[20px]">settings</span>
+				<span>Paramètres</span>
+			</a>
+			<button
+				onclick={() => authStore.logout()}
+				class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500 hover:text-red-500 hover:bg-red-50 transition-colors whitespace-nowrap w-full text-left"
+			>
+				<span class="material-icons text-[20px]">logout</span>
+				<span>Déconnexion</span>
+			</button>
+		</div>
 	</div>
+
+	<button
+		onclick={() => open = !open}
+		aria-label={open ? 'Réduire la sidebar' : 'Ouvrir la sidebar'}
+		class="absolute top-8 -right-4 w-8 h-8 bg-white border border-slate-200 rounded-full shadow-md flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary transition-colors z-30"
+	>
+		<span class="material-icons text-[18px] transition-transform duration-300" style="transform: rotate({open ? '0deg' : '180deg'})">chevron_left</span>
+	</button>
 </aside>
