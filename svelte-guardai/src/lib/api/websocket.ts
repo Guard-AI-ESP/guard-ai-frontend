@@ -101,6 +101,19 @@ class WebSocketManager {
 			console.log('WebSocket closed:', event.code, event.reason);
 			connectionStore.setWsStatus('disconnected');
 
+			// Code 4401 = token expiré/invalide côté backend — on ne reconnecte pas
+			if (event.code === 4401 || event.code === 1008) {
+				console.warn('WebSocket fermé pour token invalide, déconnexion de la session');
+				this.isManuallyDisconnected = true;
+				if (typeof localStorage !== 'undefined') {
+					localStorage.removeItem('guard_ai_token');
+				}
+				if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
+					window.location.href = '/login';
+				}
+				return;
+			}
+
 			if (!this.isManuallyDisconnected) {
 				this.scheduleReconnect();
 			}

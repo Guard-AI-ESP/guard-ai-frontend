@@ -67,7 +67,14 @@ export async function apiFetch<T>(endpoint: string, options: FetchOptions = {}):
 		}
 
 		if (response.status === 401) {
-			throw new ApiClientError('Invalid or expired API key', 401, errorDetails);
+			// Token expiré ou invalide : on purge la session et on redirige vers /login
+			if (typeof localStorage !== 'undefined') {
+				localStorage.removeItem('guard_ai_token');
+			}
+			if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
+				window.location.href = '/login';
+			}
+			throw new ApiClientError('Session expirée, veuillez vous reconnecter', 401, errorDetails);
 		}
 
 		throw new ApiClientError(
