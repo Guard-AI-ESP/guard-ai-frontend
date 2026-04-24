@@ -2,7 +2,7 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { derived } from 'svelte/store';
 	import Header from '$lib/components/Header.svelte';
-	import { eventsData } from '$lib/stores/events.svelte';
+	import { eventsData, eventsStore } from '$lib/stores/events.svelte';
 	import { connectionStore, isConnected, isWsConnected } from '$lib/stores/connection.svelte';
 	import { wsManager } from '$lib/api';
 	import type { EventV1 } from '$lib/types';
@@ -58,9 +58,16 @@
 		return new Date(ts).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 	}
 
+	function formatDateTime(ts: string) {
+		return new Date(ts).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+	}
+
 	onMount(async () => {
 		const healthy = await connectionStore.checkApiHealth();
-		if (healthy) wsManager.connect();
+		if (healthy) {
+			await eventsStore.load({ source: 'sensor', limit: 100 });
+			wsManager.connect();
+		}
 	});
 
 	onDestroy(() => wsManager.disconnect());
@@ -150,29 +157,57 @@
 			<h2 class="font-semibold text-slate-800">Flux capteurs temps réel</h2>
 			<span class="text-xs text-slate-400">20 derniers événements</span>
 		</div>
-		<div class="divide-y divide-slate-50">
-			{#each ($eventsData).filter(e => e.source === 'sensor').slice(0, 20) as event (event.event_id)}
-				{@const meta = SENSOR_META[event.type as SensorType]}
-				<div class="flex items-center gap-3 px-5 py-3 hover:bg-slate-50 transition-colors">
-					<div class="w-8 h-8 rounded-xl {severityIconBg(event.severity)} flex items-center justify-center shrink-0">
-						<span class="material-icons text-[16px]">{meta?.icon ?? 'sensors'}</span>
+
+		{#if ($eventsData).filter(e => e.source === 'sensor').length === 0}
+			<div class="px-5 py-10 text-center">
+				<span class="material-icons text-3xl text-slate-300">sensors_off</span>
+				<p class="text-sm text-slate-400 mt-2">Aucun événement capteur reçu</p>
+				<p class="text-xs text-slate-300 mt-1">Lance le simulateur IoT pour voir des données</p>
+			</div>
+		{:else}
+			{@const sorted = ($eventsData).filter(e => e.source === 'sensor').sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).slice(0, 20)}
+
+			<!-- Ligne desktop -->
+			<div class="hidden sm:block divide-y divide-slate-50">
+				{#each sorted as event (event.event_id)}
+					{@const meta = SENSOR_META[event.type as SensorType]}
+					<div class="flex items-center gap-3 px-5 py-3 hover:bg-slate-50 transition-colors">
+						<div class="w-8 h-8 rounded-xl {severityIconBg(event.severity)} flex items-center justify-center shrink-0">
+							<span class="material-icons text-[16px]">{meta?.icon ?? 'sensors'}</span>
+						</div>
+						<div class="flex-1 min-w-0">
+							<span class="text-sm font-medium text-slate-700 capitalize">{event.type}</span>
+							{#if meta}
+								<span class="text-sm text-slate-400 ml-2">{meta.value(event.payload)}</span>
+							{/if}
+						</div>
+						<span class="text-xs font-semibold px-2 py-0.5 rounded-full shrink-0 {severityBadge(event.severity)}">{event.severity}</span>
+						<span class="text-xs text-slate-400 tabular-nums shrink-0">{formatDateTime(event.timestamp)}</span>
 					</div>
-					<div class="flex-1 min-w-0">
-						<span class="text-sm font-medium text-slate-700 capitalize">{event.type}</span>
-						{#if meta}
-							<span class="text-sm text-slate-400 ml-2">{meta.value(event.payload)}</span>
-						{/if}
+				{/each}
+			</div>
+
+			<!-- Cards mobile -->
+			<div class="sm:hidden flex flex-col gap-3 p-4">
+				{#each sorted as event (event.event_id)}
+					{@const meta = SENSOR_META[event.type as SensorType]}
+					<div class="flex items-center gap-3 bg-slate-50 rounded-2xl p-3.5">
+						<div class="w-10 h-10 rounded-xl {severityIconBg(event.severity)} flex items-center justify-center shrink-0">
+							<span class="material-icons text-[18px]">{meta?.icon ?? 'sensors'}</span>
+						</div>
+						<div class="flex-1 min-w-0">
+							<div class="flex items-center gap-2 flex-wrap">
+								<span class="text-sm font-semibold text-slate-700 capitalize">{event.type}</span>
+								<span class="text-xs font-semibold px-2 py-0.5 rounded-full {severityBadge(event.severity)}">{event.severity}</span>
+							</div>
+							{#if meta}
+								<p class="text-sm text-slate-500 mt-0.5">{meta.value(event.payload)}</p>
+							{/if}
+							<p class="text-xs text-slate-400 mt-1 tabular-nums">{formatDateTime(event.timestamp)}</p>
+						</div>
 					</div>
-					<span class="text-xs font-semibold px-2 py-0.5 rounded-full shrink-0 {severityBadge(event.severity)}">{event.severity}</span>
-					<span class="text-xs text-slate-400 tabular-nums shrink-0">{formatTime(event.timestamp)}</span>
-				</div>
-			{:else}
-				<div class="px-5 py-10 text-center">
-					<span class="material-icons text-3xl text-slate-300">sensors_off</span>
-					<p class="text-sm text-slate-400 mt-2">Aucun événement capteur reçu</p>
-					<p class="text-xs text-slate-300 mt-1">Lance le simulateur IoT pour voir des données</p>
-				</div>
-			{/each}
-		</div>
+				{/each}
+			</div>
+		{/if}
 	</div>
 </div>
